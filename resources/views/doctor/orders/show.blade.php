@@ -47,19 +47,30 @@
                                 @foreach($order->items as $item)
                                     <tr>
                                         <td class="ps-4">
-                                            <div class="d-flex align-items-center gap-3">
-                                                @if($item->product && $item->product->image)
-                                                    <img src="{{ asset('storage/' . $item->product->image) }}" class="rounded shadow-sm border" style="width: 54px; height: 54px; object-fit: cover;">
-                                                @else
+                                            @if($item->product)
+                                                <a href="{{ route('products.show', $item->product->id) }}" class="d-flex align-items-center gap-3 text-decoration-none">
+                                                    @if($item->product->image)
+                                                        <img src="{{ asset('storage/' . $item->product->image) }}" class="rounded shadow-sm border" style="width: 54px; height: 54px; object-fit: cover;">
+                                                    @else
+                                                        <div class="rounded bg-light d-flex align-items-center justify-content-center border" style="width: 54px; height: 54px;">
+                                                            <i class="fas fa-image text-muted"></i>
+                                                        </div>
+                                                    @endif
+                                                    <div>
+                                                        <div class="fw-bold text-success">{{ $item->product->name }}</div>
+                                                        <div class="small text-muted">{{ $item->product->category }}</div>
+                                                    </div>
+                                                </a>
+                                            @else
+                                                <div class="d-flex align-items-center gap-3 text-muted">
                                                     <div class="rounded bg-light d-flex align-items-center justify-content-center border" style="width: 54px; height: 54px;">
                                                         <i class="fas fa-image text-muted"></i>
                                                     </div>
-                                                @endif
-                                                <div>
-                                                    <div class="fw-bold text-dark">{{ $item->product ? $item->product->name : 'Product' }}</div>
-                                                    <div class="small text-muted">{{ $item->product ? $item->product->category : '' }}</div>
+                                                    <div>
+                                                        <div class="fw-bold">Product Removed</div>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            @endif
                                         </td>
                                         <td class="text-center fw-semibold">₹{{ number_format($item->price, 2) }}</td>
                                         <td class="text-center"><span class="badge bg-secondary-subtle text-dark fs-6 px-3 py-1">{{ $item->quantity }}</span></td>

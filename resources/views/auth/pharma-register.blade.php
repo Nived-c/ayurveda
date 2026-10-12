@@ -232,7 +232,7 @@
                         <!-- GST Number -->
                         <div class="col-md-6">
                             <label class="form-label">GST Number (15 Chars) <span class="text-danger">*</span></label>
-                            <input type="text" name="gst_number" class="form-control @error('gst_number') is-invalid @enderror" placeholder="29AAAAA0000A1Z5" value="{{ old('gst_number') }}" pattern="[0-9]{2}[A-Za-z]{5}[0-9]{4}[A-Za-z]{1}[1-9A-Za-z]{1}[Zz][0-9A-Za-z]{1}" maxlength="15" minlength="15" title="15-character GSTIN format e.g. 29AAAAA0000A1Z5" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 15);" required>
+                            <input type="text" name="gst_number" class="form-control @error('gst_number') is-invalid @enderror" placeholder="29AAAAA0000A1Z5" value="{{ old('gst_number') }}" pattern="[0-9]{2}[A-Za-z]{5}[0-9]{4}[A-Za-z]{1}[0-9A-Za-z]{1}[Zz][0-9A-Za-z]{1}" maxlength="15" minlength="15" title="15-character GSTIN format e.g. 29AAAAA0000A1Z5" required>
                             @error('gst_number') <div class="invalid-feedback small">{{ $message }}</div> @enderror
                         </div>
 
@@ -335,6 +335,35 @@
                         </div>
                     </div>
 
+                    <div class="col-12 mb-3 mt-2">
+                        <div class="form-check d-flex align-items-center">
+                            <input class="form-check-input me-2" type="checkbox" id="agreeTerms" required style="cursor: pointer; width: 1.2rem; height: 1.2rem; border-color: var(--secondary-green);">
+                            <label class="form-check-label small text-muted mb-0" for="agreeTerms" style="cursor: pointer; user-select: none;">
+                                I agree to the <a href="{{ route('terms') }}" target="_blank" class="text-success fw-bold text-decoration-none">Terms of Service</a> & <a href="{{ route('privacy') }}" target="_blank" class="text-success fw-bold text-decoration-none">Privacy Policy</a> <span class="text-danger">*</span>
+                            </label>
+                        </div>
+                        <div class="mt-1 ps-4">
+                            <a href="#termsSummary" class="text-success small fw-semibold text-decoration-none" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="termsSummary">
+                                <i class="fas fa-info-circle me-1"></i> Read Summary of Terms & Privacy Policy
+                            </a>
+                            <div class="collapse mt-2" id="termsSummary">
+                                <div class="p-3 bg-light rounded-3 border small text-muted" style="font-size: 0.82rem; line-height: 1.5; border-color: rgba(109, 151, 115, 0.25) !important;">
+                                    <p class="mb-2 fw-semibold text-dark"><i class="fas fa-balance-scale text-success me-1"></i> Terms Summary:</p>
+                                    <ul class="mb-3 ps-3">
+                                        <li>You must provide verified drug manufacturing/distribution license credentials and valid GST numbers.</li>
+                                        <li>You agree to process orders, fulfill shipments securely, and comply with state medical supply standards.</li>
+                                    </ul>
+                                    <p class="mb-2 fw-semibold text-dark"><i class="fas fa-lock text-success me-1"></i> Privacy Summary:</p>
+                                    <ul class="mb-0 ps-3">
+                                        <li>We display company details, products, and contact numbers to public buyers.</li>
+                                        <li>Upload documents and drug license PDFs are kept safe for backend supervisor review.</li>
+                                        <li>We store orders, transaction hashes, and shipping status logs.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="mt-4">
                         <button type="submit" class="btn btn-submit-pharma w-100 py-3 fw-bold">
                             <i class="fas fa-check-circle me-2"></i> Register Pharma Company
@@ -431,37 +460,48 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
-        /* ══ GSTIN — accept the full 15-character GSTIN format ══
-           Format: 2-digits | 5-letters | 4-digits | 1-letter | 1-alphanum | Z | 1-alphanum = 15 chars
-           e.g. 29AAAAA0000A1Z5  32ABCDE1234F1Z9 */
+        /* ══ GSTIN — strict positional masking ══
+           Format: 2-digits | 5-letters | 4-digits | 1-letter | 1-alphanum | Z | 1-alphanum = 15 chars */
         form.querySelectorAll('input[name="gst_number"]').forEach(inp => {
             inp.setAttribute('maxlength', '15');
             inp.setAttribute('autocomplete', 'off');
             inp.setAttribute('spellcheck', 'false');
-            inp.setAttribute('inputmode', 'text');
 
             inp.addEventListener('input', function() {
-                const raw = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 15);
-                this.value = raw;
-                const len = raw.length;
-
-                if (len === 0) { clear(inp); return; }
-                if (len < 15) {
-                    hint(inp, `${len}/15 chars — continue typing your GSTIN`);
-                    return;
+                let raw = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                let out = '';
+                for (let i = 0; i < raw.length && i < 15; i++) {
+                    const ch = raw[i];
+                    if (i < 2) {
+                        if (/[0-9]/.test(ch)) out += ch; else break;
+                    } else if (i < 7) {
+                        if (/[A-Z]/.test(ch)) out += ch; else break;
+                    } else if (i < 11) {
+                        if (/[0-9]/.test(ch)) out += ch; else break;
+                    } else if (i === 11) {
+                        if (/[A-Z]/.test(ch)) out += ch; else break;
+                    } else if (i === 12) {
+                        if (/[A-Z0-9]/.test(ch)) out += ch; else break;
+                    } else if (i === 13) {
+                        if (ch === 'Z') out += ch; else break;
+                    } else if (i === 14) {
+                        if (/[A-Z0-9]/.test(ch)) out += ch;
+                    }
                 }
-
-                const gstFull = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
-                if (gstFull.test(raw)) { ok(inp); }
-                else { hint(inp, 'Type a valid GSTIN like 29AAAAA0000A1Z5'); }
+                this.value = out;
+                const len = out.length;
+                if (len === 0) { clear(inp); return; }
+                const gstFull = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9A-Z]{1}Z[0-9A-Z]{1}$/;
+                if (len === 15 && gstFull.test(out)) { ok(inp); }
+                else { hint(inp, `${len}/15 chars — e.g. 29AAAAA0000A1Z5`); }
             });
 
             inp.addEventListener('blur', () => {
                 const v = inp.value;
                 if (!v) { clear(inp); return; }
-                const gstFull = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+                const gstFull = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9A-Z]{1}Z[0-9A-Z]{1}$/;
                 if (v.length !== 15 || !gstFull.test(v)) {
-                    err(inp, `Invalid GSTIN. Must be 15 chars: e.g. 29AAAAA0000A1Z5 (got ${v.length}/15)`);
+                    err(inp, `Invalid GSTIN. Must be exactly 15 chars: e.g. 29AAAAA0000A1Z5 (got ${v.length}/15)`);
                 } else { ok(inp); }
             });
         });
@@ -557,15 +597,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     err(inp, 'Must be 10 digits starting with 6, 7, 8, or 9.'); valid = false;
                 }
             });
-
             form.querySelectorAll('input[name="gst_number"]').forEach(inp => {
                 const v = inp.value;
-                const gstFull = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+                const gstFull = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9A-Z]{1}Z[0-9A-Z]{1}$/;
                 if (!v && inp.required) { err(inp, 'GST number is required.'); valid = false; }
                 else if (v && !gstFull.test(v)) {
                     err(inp, 'Invalid GSTIN — e.g. 29AAAAA0000A1Z5 (must be exactly 15 chars)'); valid = false;
                 }
             });
+
+
 
             form.querySelectorAll('input[name="drug_license_no"]').forEach(inp => {
                 const v = inp.value;

@@ -112,13 +112,28 @@
     <label class="form-label fw-bold">Working District</label>
     <select name="district_id" class="form-select @error('district_id') is-invalid @enderror" required>
         <option value="">Select District</option>
-
-                                        @foreach($districts as $district)
-                                            <option value="{{ $district->id }}" {{ old('district_id') == $district->id ? 'selected' : '' }}>
-                                                {{ $district->name }}
-                                            </option>
-                                        @endforeach
-
+        
+        <optgroup label=" Kerala Districts">
+            @php
+                $keralaNames = ['alappuzha', 'ernakulam', 'idukki', 'kannur', 'kasaragod', 'kollam', 'kottayam', 'kozhikode', 'malappuram', 'palakkad', 'pathanamthitta', 'thiruvananthapuram', 'thrissur', 'wayanad'];
+            @endphp
+            @foreach($districts as $district)
+                @if(in_array(strtolower($district->name), $keralaNames))
+                    <option value="{{ $district->id }}" {{ old('district_id') == $district->id ? 'selected' : '' }}>
+                        {{ $district->name }}
+                    </option>
+                @endif
+            @endforeach
+        </optgroup>
+        <optgroup label="🌐 Outside Kerala / Abroad">
+            @foreach($districts as $district)
+                @if(!in_array(strtolower($district->name), $keralaNames))
+                    <option value="{{ $district->id }}" {{ old('district_id') == $district->id ? 'selected' : '' }}>
+                        {{ $district->name }}
+                    </option>
+                @endif
+            @endforeach
+        </optgroup>
     </select>
     @error('district_id') 
         <div class="invalid-feedback">{{ $message }}</div> 

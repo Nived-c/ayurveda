@@ -29,6 +29,7 @@
 body {
     background-color: #fff;
     color: #2e3b2e;
+    font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 .ma-badge-pill {
@@ -46,7 +47,7 @@ body {
 }
 
 .ma-main-heading {
-    font-family: 'Playfair Display', Georgia, serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: clamp(2rem, 4vw, 3.2rem);
     font-weight: 800;
     color: var(--ma-forest);
@@ -79,9 +80,9 @@ body {
 
 /* Metric Stats */
 .ma-metric-num {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: clamp(2.2rem, 3.5vw, 3rem);
-    font-weight: 900;
+    font-weight: 800;
     color: var(--ma-forest);
     line-height: 1;
     margin-bottom: 6px;
@@ -149,8 +150,8 @@ body {
 .ma-check-icon {
     width: 22px;
     height: 22px;
-    background-color: rgba(79, 119, 45, 0.1);
-    color: var(--ma-herb);
+    background-color: rgba(12, 59, 46, 0.1);
+    color: var(--ma-forest);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -202,10 +203,14 @@ body {
 }
 
 .ma-card-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.25rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.2rem;
     font-weight: 700;
     margin-bottom: 0.8rem;
+    color: var(--ma-forest);
+}
+.ma-service-card.primary .ma-card-title {
+    color: #fff;
 }
 .ma-card-text {
     font-size: 0.85rem;
@@ -337,7 +342,7 @@ body {
         <div class="row mb-5 align-items-end g-3">
             <div class="col-md-6">
                 <span class="ma-badge-pill" style="margin-bottom:0.8rem;">Timings &amp; Services</span>
-                <h2 class="fw-bold text-dark mb-0" style="font-family:'Playfair Display',serif; font-size:clamp(1.8rem, 3vw, 2.3rem); line-height:1.2;">
+                <h2 class="fw-bold text-dark mb-0" style="font-family:'Plus Jakarta Sans', sans-serif; font-size:clamp(1.8rem, 3vw, 2.3rem); line-height:1.2;">
                     Our Astrology Services &amp; Availability
                 </h2>
             </div>
@@ -364,7 +369,7 @@ body {
             {{-- Card 2: Tridosha Balancing --}}
             <div class="col-md-4">
                 <div class="ma-service-card">
-                    <div class="ma-card-icon" style="background-color: rgba(79, 119, 45, 0.1); color: var(--ma-herb);">
+                    <div class="ma-card-icon" style="background-color: rgba(12, 59, 46, 0.08); color: var(--ma-forest);">
                         <i class="fas fa-leaf"></i>
                     </div>
                     <h4 class="ma-card-title">Tridosha Balancing</h4>
@@ -375,7 +380,7 @@ body {
             {{-- Card 3: Online Video Consultation --}}
             <div class="col-md-4">
                 <div class="ma-service-card">
-                    <div class="ma-card-icon" style="background-color: rgba(13, 110, 253, 0.1); color: #0d6efd;">
+                    <div class="ma-card-icon" style="background-color: rgba(12, 59, 46, 0.08); color: var(--ma-forest);">
                         <i class="fas fa-video"></i>
                     </div>
                     <h4 class="ma-card-title">Online Google Meet</h4>
@@ -393,7 +398,7 @@ body {
             {{-- Card 4: In-Clinic Visits --}}
             <div class="col-md-4">
                 <div class="ma-service-card">
-                    <div class="ma-card-icon" style="background-color: rgba(220, 53, 69, 0.1); color: #dc3545;">
+                    <div class="ma-card-icon" style="background-color: rgba(12, 59, 46, 0.08); color: var(--ma-forest);">
                         <i class="fas fa-hospital"></i>
                     </div>
                     <h4 class="ma-card-title">In-Clinic Consultations</h4>
@@ -411,7 +416,7 @@ body {
             {{-- Card 5: Herbal Remedies --}}
             <div class="col-md-4">
                 <div class="ma-service-card">
-                    <div class="ma-card-icon" style="background-color: rgba(255, 193, 7, 0.15); color: #b45309;">
+                    <div class="ma-card-icon" style="background-color: rgba(12, 59, 46, 0.08); color: var(--ma-forest);">
                         <i class="fas fa-flask"></i>
                     </div>
                     <h4 class="ma-card-title">Pharmacy Integration</h4>
@@ -422,7 +427,7 @@ body {
             {{-- Card 6: Dashboard Reschedule --}}
             <div class="col-md-4">
                 <div class="ma-service-card">
-                    <div class="ma-card-icon" style="background-color: rgba(108, 117, 125, 0.1); color: #495057;">
+                    <div class="ma-card-icon" style="background-color: rgba(12, 59, 46, 0.08); color: var(--ma-forest);">
                         <i class="fas fa-calendar-alt"></i>
                     </div>
                     <h4 class="ma-card-title">Flexible Rescheduling</h4>

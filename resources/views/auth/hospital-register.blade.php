@@ -232,7 +232,7 @@
                         <!-- GST Number (optional) -->
                         <div class="col-md-6">
                             <label class="form-label">GST Number <span class="text-muted">(Optional - 15 Chars)</span></label>
-                            <input type="text" name="gst_number" class="form-control @error('gst_number') is-invalid @enderror" placeholder="29AAAAA0000A1Z5" value="{{ old('gst_number') }}" pattern="[0-9]{2}[A-Za-z]{5}[0-9]{4}[A-Za-z]{1}[1-9A-Za-z]{1}[Zz][0-9A-Za-z]{1}" maxlength="15" minlength="15" title="15-character GSTIN format e.g. 29AAAAA0000A1Z5" oninput="this.value = this.value.toUpperCase();">
+                             <input type="text" name="gst_number" class="form-control @error('gst_number') is-invalid @enderror" placeholder="29AAAAA0000A1Z5" value="{{ old('gst_number') }}" maxlength="15" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');">
                             @error('gst_number') <div class="invalid-feedback small">{{ $message }}</div> @enderror
                         </div>
 
@@ -291,6 +291,35 @@
                             <label class="form-label">Hospital License Document (PDF / Image)</label>
                             <input type="file" name="license_document" class="form-control" accept=".pdf,image/*">
                             <div class="form-text small text-muted">Upload registered hospital establishment license or certificate (max 5MB).</div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 mb-3 mt-2">
+                        <div class="form-check d-flex align-items-center">
+                            <input class="form-check-input me-2" type="checkbox" id="agreeTerms" required style="cursor: pointer; width: 1.2rem; height: 1.2rem; border-color: var(--secondary-green);">
+                            <label class="form-check-label small text-muted mb-0" for="agreeTerms" style="cursor: pointer; user-select: none;">
+                                I agree to the <a href="{{ route('terms') }}" target="_blank" class="text-success fw-bold text-decoration-none">Terms of Service</a> & <a href="{{ route('privacy') }}" target="_blank" class="text-success fw-bold text-decoration-none">Privacy Policy</a> <span class="text-danger">*</span>
+                            </label>
+                        </div>
+                        <div class="mt-1 ps-4">
+                            <a href="#termsSummary" class="text-success small fw-semibold text-decoration-none" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="termsSummary">
+                                <i class="fas fa-info-circle me-1"></i> Read Summary of Terms & Privacy Policy
+                            </a>
+                            <div class="collapse mt-2" id="termsSummary">
+                                <div class="p-3 bg-light rounded-3 border small text-muted" style="font-size: 0.82rem; line-height: 1.5; border-color: rgba(109, 151, 115, 0.25) !important;">
+                                    <p class="mb-2 fw-semibold text-dark"><i class="fas fa-balance-scale text-success me-1"></i> Terms Summary:</p>
+                                    <ul class="mb-3 ps-3">
+                                        <li>You must present genuine clinic/hospital registration numbers, health department licenses, and practitioner listings.</li>
+                                        <li>You agree to offer ethical, qualified clinical services, and maintain safety standard guidelines.</li>
+                                    </ul>
+                                    <p class="mb-2 fw-semibold text-dark"><i class="fas fa-lock text-success me-1"></i> Privacy Summary:</p>
+                                    <ul class="mb-0 ps-3">
+                                        <li>We display hospital names, available specialists, and consulting hours to patient directories.</li>
+                                        <li>Hospital licenses and establishment records are uploaded securely for administrative audit.</li>
+                                        <li>Patient appointment histories and clinical lists are private and secure.</li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -421,7 +450,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.value = out;
                 const len = out.length;
                 if (len === 0) { clear(inp); return; }
-                const gstFull = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+                const gstFull = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9A-Z]{1}Z[0-9A-Z]{1}$/;
                 if (len === 15 && gstFull.test(out)) { ok(inp); }
                 else { hint(inp, `${len}/15 chars — e.g. 29AAAAA0000A1Z5`); }
             });
@@ -429,9 +458,9 @@ document.addEventListener('DOMContentLoaded', function() {
             inp.addEventListener('blur', () => {
                 const v = inp.value;
                 if (!v) { clear(inp); return; }
-                const gstFull = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+                const gstFull = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9A-Z]{1}Z[0-9A-Z]{1}$/;
                 if (v.length !== 15 || !gstFull.test(v)) {
-                    err(inp, `Invalid GSTIN. Must be 15 chars: e.g. 29AAAAA0000A1Z5 (got ${v.length}/15)`);
+                    err(inp, `Invalid GSTIN. Must be exactly 15 chars: e.g. 29AAAAA0000A1Z5 (got ${v.length}/15)`);
                 } else { ok(inp); }
             });
         });
@@ -523,7 +552,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             form.querySelectorAll('input[name="gst_number"]').forEach(inp => {
                 const v = inp.value;
-                const gstFull = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+                const gstFull = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9A-Z]{1}Z[0-9A-Z]{1}$/;
                 if (!v && inp.required) { err(inp, 'GST number is required.'); valid = false; }
                 else if (v && !gstFull.test(v)) {
                     err(inp, 'Invalid GSTIN — e.g. 29AAAAA0000A1Z5 (must be exactly 15 chars)'); valid = false;

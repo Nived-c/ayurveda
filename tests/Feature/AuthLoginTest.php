@@ -130,7 +130,7 @@ class AuthLoginTest extends TestCase
         ]);
     }
 
-    public function test_doctor_registration_with_medical_astrology()
+    public function test_doctor_registration()
     {
         $category = \App\Models\DoctorCategory::create(['name' => 'Kayachikitsa']);
 
@@ -140,7 +140,7 @@ class AuthLoginTest extends TestCase
             'phone' => '9876543299',
             'password' => 'password123',
             'medical_registration_no' => 'KMC/99999/2022',
-            'qualification' => 'BAMS, Jyotish Acharya',
+            'qualification' => 'BAMS',
             'specialization_category' => $category->id,
             'specialization_subcategory' => 'General Medicine',
             'state_name' => 'Kerala',
@@ -149,16 +149,12 @@ class AuthLoginTest extends TestCase
             'consultation_fee' => 600,
             'consultation_type' => 'Both',
             'address' => 'Sample Astro Clinic Address 123',
-            'knows_medical_astrology' => '1',
-            'astrology_details' => 'Nadi pariksha and planetary dosha correlation',
-            'astrology_qualification' => 'Jyotish Acharya (Vedic Astrology)',
         ]);
 
         $response->assertRedirect(route('login'));
         $this->assertDatabaseHas('doctors', [
             'email' => 'astrodoc@example.com',
-            'knows_medical_astrology' => 1,
-            'astrology_qualification' => 'Jyotish Acharya (Vedic Astrology)',
+            'knows_medical_astrology' => 0,
         ]);
     }
 }

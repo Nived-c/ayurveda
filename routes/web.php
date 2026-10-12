@@ -22,6 +22,8 @@ Route::get('/hospitals', function () {
 })->name('hospitals.index');
 Route::get('/medical-astrology', [UserController::class, 'medicalAstrology'])->name('medical_astrology');
 Route::get('/product/{id}', [UserController::class, 'showProduct'])->name('products.show');
+Route::view('/terms', 'terms')->name('terms');
+Route::view('/privacy', 'privacy')->name('privacy');
 
 // --- Auth Routes (UserController) ---
 Route::get('/login', [UserController::class, 'showLogin'])->name('login');
@@ -93,6 +95,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/astrology', [AdminController::class, 'editAstrology'])->name('astrology.edit');
         Route::post('/astrology', [AdminController::class, 'updateAstrology'])->name('astrology.update');
 
+        // Global Portal Settings (Contact Info)
+        Route::get('/settings/contact', [AdminController::class, 'editContactSettings'])->name('settings.contact');
+        Route::post('/settings/contact', [AdminController::class, 'updateContactSettings'])->name('settings.contact.update');
+
         // Appointments Oversight by Admin
         Route::get('/bookings', [AdminController::class, 'bookingsIndex'])->name('bookings.index');
         Route::put('/bookings/{id}/status', [AdminController::class, 'updateBookingStatus'])->name('bookings.update_status');
@@ -161,6 +167,7 @@ Route::get('/api/product-subcategories/{categoryId}', [\App\Http\Controllers\Adm
 // --- Doctor Role Routes (DoctorController) ---
 Route::prefix('doctor')->name('doctor.')->middleware('auth:doctor')->group(function () {
     Route::get('/dashboard', [DoctorController::class, 'dashboard'])->name('dashboard');
+    Route::get('/notifications/unread-latest', [DoctorController::class, 'getUnreadLatestNotification'])->name('notifications.unread_latest');
     Route::post('/unavailability', [DoctorController::class, 'toggleAvailability'])->name('unavailability.toggle');
     Route::get('/profile', [DoctorController::class, 'profile'])->name('profile');
     Route::put('/profile', [DoctorController::class, 'updateProfile'])->name('profile.update');
@@ -188,6 +195,7 @@ Route::prefix('pharma')->name('pharma.')->middleware('auth:pharma')->group(funct
     Route::get('/products/{id}/edit', [PharmaController::class, 'editProduct'])->name('products.edit');
     Route::put('/products/{id}', [PharmaController::class, 'updateProduct'])->name('products.update');
     Route::delete('/products/{id}', [PharmaController::class, 'destroyProduct'])->name('products.destroy');
+    Route::get('/orders', [PharmaController::class, 'ordersIndex'])->name('orders.index');
     Route::get('/orders/{id}', [PharmaController::class, 'showOrder'])->name('orders.show');
     Route::put('/orders/{id}/status', [PharmaController::class, 'updateOrderStatus'])->name('orders.status.update');
     Route::get('/profile', [PharmaController::class, 'editProfile'])->name('profile.edit');

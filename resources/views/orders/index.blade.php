@@ -16,7 +16,7 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Order ID</th>
+                                    <th>Items &amp; Seller</th>
                                     <th>Date</th>
                                     <th>Total Amount</th>
                                     <th>Order Status</th>
@@ -27,7 +27,26 @@
                             <tbody>
                                 @foreach($orders as $order)
                                     <tr>
-                                        <td>#{{ $order->id }}</td>
+                                        <td>
+                                            @foreach($order->items as $item)
+                                                <div class="mb-1">
+                                                    @if($item->product)
+                                                        <a href="{{ route('products.show', $item->product->id) }}" class="fw-bold text-success text-decoration-none">{{ $item->product->name }}</a>
+                                                     @else
+                                                         <span class="fw-bold text-muted">Product Removed</span>
+                                                     @endif
+                                                    @if($item->product)
+                                                        @if($item->product->doctor)
+                                                            <small class="text-muted d-block"><i class="fas fa-user-md me-1"></i>Dr. {{ $item->product->doctor->name }}</small>
+                                                        @elseif($item->product->pharmaCompany)
+                                                            <small class="text-muted d-block"><i class="fas fa-building me-1"></i>{{ $item->product->pharmaCompany->company_name }}</small>
+                                                        @else
+                                                            <small class="text-muted d-block"><i class="fas fa-store me-1"></i>Ayurveda System</small>
+                                                        @endif
+                                                    @endif
+                                                </div>
+                                            @endforeach
+                                        </td>
                                         <td>{{ $order->created_at->format('d M Y') }}</td>
                                         <td>₹{{ number_format($order->total_price, 2) }}</td>
                                         <td>

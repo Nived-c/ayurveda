@@ -90,8 +90,11 @@
                             </div>
                         </div>
 
-                        <div class="mt-5 text-center">
-                            <button type="submit" class="btn btn-primary btn-lg px-5 rounded-pill shadow-sm fw-bold">
+                        <div class="mt-5 d-flex gap-3 justify-content-center">
+                            <a href="{{ route('pharma.dashboard') }}" class="btn btn-outline-secondary btn-lg rounded-pill px-5 fw-bold text-decoration-none text-center">
+                                <i class="fas fa-times me-2"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success btn-lg px-5 rounded-pill shadow-sm fw-bold">
                                 <i class="fas fa-save me-2"></i> Update Profile
                             </button>
                         </div>

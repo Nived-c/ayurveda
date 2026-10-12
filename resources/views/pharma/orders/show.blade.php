@@ -36,42 +36,30 @@
                             </p>
 
                             <!-- Update Order Status -->
-                            <div class="order-status-control mt-3">
-                                <label class="small text-muted mb-1 d-block font-weight-bold">Update Order Status:</label>
-                                <form action="{{ route('pharma.orders.status.update', $order->id) }}" method="POST" class="d-inline-block">
+                            <div class="order-status-control mt-3 text-start text-md-end">
+                                <label class="small text-muted mb-1 d-block font-weight-bold">Update Order / Shipping Status</label>
+                                <form action="{{ route('pharma.orders.status.update', $order->id) }}" method="POST" class="d-inline-block" style="min-width: 250px;">
                                     @csrf
                                     @method('PUT')
-                                    <div class="btn-group shadow-sm" role="group">
-                                        <button type="submit" name="order_status" value="Placed" class="btn btn-sm {{ $order->order_status == 'Placed' ? 'btn-primary shadow-none' : 'btn-outline-primary' }}">
-                                            <i class="fas fa-box me-1"></i> Placed
-                                        </button>
-                                        <button type="submit" name="order_status" value="Delivered" class="btn btn-sm {{ $order->order_status == 'Delivered' ? 'btn-success shadow-none' : 'btn-outline-success' }}">
-                                            <i class="fas fa-check-circle me-1"></i> Delivered
-                                        </button>
-                                    </div>
+                                    <select name="order_status" class="form-select" onchange="this.form.submit()">
+                                        <option value="Placed" {{ $order->order_status == 'Placed' ? 'selected' : '' }}>📦 Order Placed (Processing)</option>
+                                        <option value="Shipped" {{ $order->order_status == 'Shipped' ? 'selected' : '' }}>🚚 Shipped / Out for Delivery</option>
+                                        <option value="Delivered" {{ $order->order_status == 'Delivered' ? 'selected' : '' }}>✅ Delivered to Customer</option>
+                                        <option value="Cancelled" {{ $order->order_status == 'Cancelled' ? 'selected' : '' }}>❌ Cancelled</option>
+                                    </select>
                                 </form>
                             </div>
 
-                            <!-- Update Payment Status (Payment Received Button) -->
-                            <div class="payment-status-control mt-3">
-                                <label class="small text-muted mb-1 d-block font-weight-bold">Payment Status:</label>
-                                <form action="{{ route('pharma.orders.status.update', $order->id) }}" method="POST" class="d-inline-block">
+                            <!-- Update Payment Status -->
+                            <div class="payment-status-control mt-3 text-start text-md-end">
+                                <label class="small text-muted mb-1 d-block font-weight-bold">Update Payment Status</label>
+                                <form action="{{ route('pharma.orders.status.update', $order->id) }}" method="POST" class="d-inline-block" style="min-width: 250px;">
                                     @csrf
                                     @method('PUT')
-                                    @if(in_array($order->payment_status, ['Completed', 'Received', 'Paid']))
-                                        <div class="d-inline-flex align-items-center gap-2">
-                                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill small fw-bold">
-                                                <i class="fas fa-check-circle me-1"></i> Payment Received
-                                            </span>
-                                            <button type="submit" name="payment_status" value="Pending" class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-1 small" title="Revert to Pending">
-                                                <i class="fas fa-undo me-1"></i> Undo
-                                            </button>
-                                        </div>
-                                    @else
-                                        <button type="submit" name="payment_status" value="Completed" class="btn btn-sm btn-success rounded-pill px-3 py-2 shadow-sm fw-bold">
-                                            <i class="fas fa-hand-holding-usd me-1"></i> Payment Received
-                                        </button>
-                                    @endif
+                                    <select name="payment_status" class="form-select" onchange="this.form.submit()">
+                                        <option value="Pending" {{ !in_array($order->payment_status, ['Completed', 'Received', 'Paid']) ? 'selected' : '' }}>⏳ Payment Pending</option>
+                                        <option value="Completed" {{ in_array($order->payment_status, ['Completed', 'Received', 'Paid']) ? 'selected' : '' }}>💰 Payment Received (Completed)</option>
+                                    </select>
                                 </form>
                             </div>
                         </div>
@@ -92,12 +80,12 @@
                                 @foreach($order->items as $item)
                                     <tr>
                                         <td>
-                                            <div class="d-flex align-items-center">
+                                            <a href="{{ route('products.show', $item->product->id) }}" class="d-flex align-items-center text-decoration-none text-success fw-bold">
                                                 @if($item->product->image)
                                                     <img src="{{ asset('storage/' . $item->product->image) }}" alt="" style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px; border-radius: 4px;">
                                                 @endif
                                                 {{ $item->product->name }}
-                                            </div>
+                                            </a>
                                         </td>
                                         <td>Rs. {{ number_format($item->price, 2) }}</td>
                                         <td>{{ $item->quantity }}</td>

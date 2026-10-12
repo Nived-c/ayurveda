@@ -139,11 +139,27 @@
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Working District</label>
                                     <select name="district_id" class="form-select @error('district_id') is-invalid @enderror">
-                                        @foreach($districts as $district)
-                                            <option value="{{ $district->id }}" {{ old('district_id', $doctor->district_id) == $district->id ? 'selected' : '' }}>
-                                                {{ $district->name }}
-                                            </option>
-                                        @endforeach
+                                        <optgroup label="🌴 Kerala Districts">
+                                            @php
+                                                $keralaNames = ['alappuzha', 'ernakulam', 'idukki', 'kannur', 'kasaragod', 'kollam', 'kottayam', 'kozhikode', 'malappuram', 'palakkad', 'pathanamthitta', 'thiruvananthapuram', 'thrissur', 'wayanad'];
+                                            @endphp
+                                            @foreach($districts as $district)
+                                                @if(in_array(strtolower($district->name), $keralaNames))
+                                                    <option value="{{ $district->id }}" {{ old('district_id', $doctor->district_id) == $district->id ? 'selected' : '' }}>
+                                                        {{ $district->name }}
+                                                    </option>
+                                                @endif
+                                            @endforeach
+                                        </optgroup>
+                                        <optgroup label="🌐 Outside Kerala / Abroad">
+                                            @foreach($districts as $district)
+                                                @if(!in_array(strtolower($district->name), $keralaNames))
+                                                    <option value="{{ $district->id }}" {{ old('district_id', $doctor->district_id) == $district->id ? 'selected' : '' }}>
+                                                        {{ $district->name }}
+                                                    </option>
+                                                @endif
+                                            @endforeach
+                                        </optgroup>
                                     </select>
                                     @error('district_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
@@ -227,8 +243,11 @@
 
                             <hr class="my-5">
 
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-success btn-lg shadow-sm">
+                            <div class="d-flex gap-3 mt-4">
+                                <a href="{{ route('doctor.dashboard') }}" class="btn btn-outline-secondary btn-lg rounded-pill py-3 fw-bold flex-grow-1 text-decoration-none text-center">
+                                    <i class="fas fa-times me-2"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-success btn-lg rounded-pill py-3 fw-bold flex-grow-1">
                                     <i class="fas fa-save me-2"></i> Update My Profile
                                 </button>
                             </div>

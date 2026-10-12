@@ -18,17 +18,21 @@ class AdminController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email' => 'required',
             'password' => 'required'
         ]);
 
-        \Log::info("ADMIN_LOGIN: Attempt for email: " . $request->email);
+        $loginInput = trim($request->email);
 
-        $admin = \App\Models\Admin::where('email', $request->email)->first();
+        \Log::info("ADMIN_LOGIN: Attempt for input: " . $loginInput);
+
+        $admin = \App\Models\Admin::where('email', $loginInput)
+            ->orWhere('name', $loginInput)
+            ->first();
 
         if ($admin && ($admin->password === $request->password || \Illuminate\Support\Facades\Hash::check($request->password, $admin->password))) {
             Auth::guard('admin')->login($admin);
-            \Log::info("ADMIN_LOGIN: Success for email: " . $request->email);
+            \Log::info("ADMIN_LOGIN: Success for input: " . $loginInput);
 
             $intended = session('url.intended');
             if ($intended && (str_contains($intended, '/login') || str_contains($intended, '/register') || str_contains($intended, '/notifications/'))) {
@@ -38,9 +42,9 @@ class AdminController extends Controller
             return redirect()->intended(route('admin.dashboard'));
         }
 
-        \Log::warning("ADMIN_LOGIN: Failed for email: " . $request->email);
+        \Log::warning("ADMIN_LOGIN: Failed for input: " . $loginInput);
 
-        return back()->withInput($request->only('email'))->with('error', 'Invalid Email or Password');
+        return back()->withInput($request->only('email'))->with('error', 'Invalid Username/Email or Password');
     }
 
     public function logout()
@@ -349,7 +353,8 @@ class AdminController extends Controller
             \App\Services\SmsService::sendSms($user->phone, $smsMessage);
         }
 
-        // 3. Email Notification
+        // 3. Email Notification (Soft-removed)
+        /*
         if ($user && $user->email) {
             try {
                 \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\AppointmentStatusUpdatedMail($booking));
@@ -357,6 +362,7 @@ class AdminController extends Controller
                 \Log::error("Failed to send emergency approval email: " . $e->getMessage());
             }
         }
+        */
 
         return back()->with('success', "Emergency 30-Min approval applied for Booking #{$booking->id}! Patient notified & Google Meet link attached.");
     }
@@ -525,9 +531,36 @@ class AdminController extends Controller
             ]);
         }
 
+        $available_from = null;
+        $available_to = null;
+        if ($astrologer->available_time) {
+            $parts = explode(' to ', $astrologer->available_time);
+            if (count($parts) === 2) {
+                try {
+                    $available_from = \Carbon\Carbon::parse($parts[0])->format('H:i');
+                    $available_to = \Carbon\Carbon::parse($parts[1])->format('H:i');
+                } catch (\Exception $e) {}
+            }
+        }
+
+        $online_available_from = null;
+        $online_available_to = null;
+        if ($astrologer->online_available_time) {
+            $parts = explode(' to ', $astrologer->online_available_time);
+            if (count($parts) === 2) {
+                try {
+                    $online_available_from = \Carbon\Carbon::parse($parts[0])->format('H:i');
+                    $online_available_to = \Carbon\Carbon::parse($parts[1])->format('H:i');
+                } catch (\Exception $e) {}
+            }
+        }
+
         $districts = \App\Models\District::all();
 
-        return view('admin.astrology.edit', compact('astrologer', 'districts'));
+        return view('admin.astrology.edit', compact(
+            'astrologer', 'districts', 'available_from', 'available_to', 
+            'online_available_from', 'online_available_to'
+        ));
     }
 
     public function updateAstrology(Request $request)
@@ -542,8 +575,10 @@ class AdminController extends Controller
             'experience' => 'required|integer|min:0',
             'consultation_fee' => 'required|integer|min:0',
             'consultation_type' => 'required|in:Online,Offline,Both',
-            'available_time' => 'nullable|string|max:255',
-            'online_available_time' => 'nullable|string|max:255',
+            'available_from' => 'nullable|required_if:consultation_type,Offline,Both',
+            'available_to' => 'nullable|required_if:consultation_type,Offline,Both',
+            'online_available_from' => 'nullable|required_if:consultation_type,Online,Both',
+            'online_available_to' => 'nullable|required_if:consultation_type,Online,Both',
             'google_meet_link' => 'nullable|url|max:255',
             'district_id' => 'required|exists:districts,id',
             'address' => 'required|string',
@@ -557,9 +592,21 @@ class AdminController extends Controller
 
         $data = $request->only([
             'name', 'email', 'phone', 'qualification', 'experience', 'consultation_fee',
-            'consultation_type', 'available_time', 'online_available_time', 'google_meet_link',
-            'district_id', 'address', 'astrology_qualification', 'astrology_details'
+            'consultation_type', 'google_meet_link', 'district_id', 'address', 
+            'astrology_qualification', 'astrology_details'
         ]);
+
+        $availableTime = null;
+        if ($request->filled('available_from') && $request->filled('available_to')) {
+            $availableTime = \Carbon\Carbon::parse($request->available_from)->format('h:i A') . ' to ' . \Carbon\Carbon::parse($request->available_to)->format('h:i A');
+        }
+        $data['available_time'] = $availableTime;
+
+        $onlineAvailableTime = null;
+        if ($request->filled('online_available_from') && $request->filled('online_available_to')) {
+            $onlineAvailableTime = \Carbon\Carbon::parse($request->online_available_from)->format('h:i A') . ' to ' . \Carbon\Carbon::parse($request->online_available_to)->format('h:i A');
+        }
+        $data['online_available_time'] = $onlineAvailableTime;
 
         if ($request->filled('password')) {
             $data['password'] = \Hash::make($request->password);
@@ -580,5 +627,37 @@ class AdminController extends Controller
         $astrologer->update($data);
 
         return redirect()->back()->with('success', 'Medical Astrology settings updated successfully!');
+    }
+
+    public function editContactSettings()
+    {
+        $settings = [
+            'contact_phone' => \App\Models\Setting::getValue('contact_phone', ''),
+            'contact_email' => \App\Models\Setting::getValue('contact_email', ''),
+        ];
+
+        return view('admin.settings.contact', compact('settings'));
+    }
+
+    public function updateContactSettings(Request $request)
+    {
+        $request->validate([
+            'contact_phone' => ['required', 'regex:/^[6-9]\d{9}$/'],
+            'contact_email' => 'required|email|max:255',
+        ], [
+            'contact_phone.required' => 'Please enter the contact phone number.',
+            'contact_phone.regex' => 'Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.',
+            'contact_email.required' => 'Please enter the contact email address.',
+            'contact_email.email' => 'Please enter a valid email address.',
+        ]);
+
+        foreach ($request->only(['contact_phone', 'contact_email']) as $key => $value) {
+            \App\Models\Setting::updateOrCreate(
+                ['key' => $key],
+                ['value' => $value]
+            );
+        }
+
+        return redirect()->back()->with('success', 'Contact settings updated successfully!');
     }
 }

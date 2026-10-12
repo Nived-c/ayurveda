@@ -33,7 +33,7 @@ class DoctorController extends Controller
             'email' => 'required|string|email|max:255|unique:doctors,email',
             'password' => 'required|string|min:8',
             'phone' => ['required', 'regex:/^[6-9]\d{9}$/'],
-            'medical_registration_no' => ['nullable', 'string', 'min:10', 'max:18', 'regex:/^[A-Z]{2,6}\/[0-9]{1,6}\/[0-9]{4}$/'],
+            'medical_registration_no' => ['nullable', 'string', 'min:9', 'max:18', 'regex:/^[A-Z]{2,6}\/[0-9]{1,6}\/[0-9]{4}$/'],
             'specialization_category' => 'required|string|max:255',
             'specialization_subcategory' => 'nullable|string|max:255',
             'district_id' => 'required|exists:districts,id',
@@ -58,7 +58,15 @@ class DoctorController extends Controller
         ]);
 
         // Resolve Category Names
-        $category = \App\Models\DoctorCategory::find($request->specialization_category);
+        $catInput = $request->specialization_category;
+        if (is_array($catInput)) {
+            $catNames = \App\Models\DoctorCategory::whereIn('id', $catInput)->orWhereIn('name', $catInput)->pluck('name')->toArray();
+            $categoryName = !empty($catNames) ? implode(', ', $catNames) : implode(', ', array_filter($catInput));
+        } else {
+            $cat = \App\Models\DoctorCategory::find($catInput);
+            $categoryName = $cat ? $cat->name : $catInput;
+        }
+
         $subcategory = \App\Models\DoctorSubcategory::find($request->specialization_subcategory);
 
         $availableTime = null;
@@ -93,7 +101,7 @@ class DoctorController extends Controller
             'password_plain' => $request->password,
             'phone' => $request->phone,
             'medical_registration_no' => $request->medical_registration_no ? strtoupper($request->medical_registration_no) : null,
-            'specialization_category' => $category ? $category->name : $request->specialization_category,
+            'specialization_category' => $categoryName,
             'specialization_subcategory' => $subcategory ? $subcategory->name : $request->specialization_subcategory,
             'district_id' => $request->district_id,
             'current_location' => $request->current_location,
@@ -144,7 +152,7 @@ class DoctorController extends Controller
             'email' => 'required|string|email|max:255|unique:doctors,email,' . $id,
             'password' => 'nullable|string|min:8',
             'phone' => ['required', 'regex:/^[6-9]\d{9}$/'],
-            'medical_registration_no' => ['nullable', 'string', 'min:10', 'max:18', 'regex:/^[A-Z]{2,6}\/[0-9]{1,6}\/[0-9]{4}$/'],
+            'medical_registration_no' => ['nullable', 'string', 'min:9', 'max:18', 'regex:/^[A-Z]{2,6}\/[0-9]{1,6}\/[0-9]{4}$/'],
             'specialization_category' => 'required',
             'specialization_subcategory' => 'nullable',
             'district_id' => 'required|exists:districts,id',
@@ -168,7 +176,15 @@ class DoctorController extends Controller
         ]);
 
         // Resolve Category Names
-        $category = DoctorCategory::find($request->specialization_category);
+        $catInput = $request->specialization_category;
+        if (is_array($catInput)) {
+            $catNames = DoctorCategory::whereIn('id', $catInput)->orWhereIn('name', $catInput)->pluck('name')->toArray();
+            $categoryName = !empty($catNames) ? implode(', ', $catNames) : implode(', ', array_filter($catInput));
+        } else {
+            $cat = DoctorCategory::find($catInput);
+            $categoryName = $cat ? $cat->name : $catInput;
+        }
+
         $subcategory = DoctorSubcategory::find($request->specialization_subcategory);
 
         $data = [
@@ -176,7 +192,7 @@ class DoctorController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
             'medical_registration_no' => $request->medical_registration_no,
-            'specialization_category' => $category ? $category->name : $request->specialization_category,
+            'specialization_category' => $categoryName,
             'specialization_subcategory' => $subcategory ? $subcategory->name : $request->specialization_subcategory,
             'district_id' => $request->district_id,
             'current_location' => $request->current_location,
@@ -247,8 +263,31 @@ class DoctorController extends Controller
     }
 
     // --- Doctor Role Functions ---
+    public function getUnreadLatestNotification()
+    {
+        \App\Models\DoctorToken::autoCancelExpiredPendingBookings();
+        $doctorId = \Illuminate\Support\Facades\Auth::guard('doctor')->id();
+        $notif = \App\Models\DoctorNotification::where('doctor_id', $doctorId)
+            ->where('is_read', false)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if ($notif) {
+            $notif->update(['is_read' => true]);
+            return response()->json([
+                'has_notification' => true,
+                'title'            => $notif->title,
+                'message'          => $notif->message,
+                'link'             => $notif->link ?? route('doctor.dashboard'),
+            ]);
+        }
+
+        return response()->json(['has_notification' => false]);
+    }
+
     public function dashboard(\Illuminate\Http\Request $request)
     {
+        \App\Models\DoctorToken::autoCancelExpiredPendingBookings();
         $doctorId = \Illuminate\Support\Facades\Auth::guard('doctor')->id();
         $query = \App\Models\DoctorToken::where('doctor_id', $doctorId)->with('user');
         
@@ -411,7 +450,8 @@ class DoctorController extends Controller
         $time = \Carbon\Carbon::parse($booking->booking_time)->format('h:i A');
         $meetLink = $booking->google_meet_link ?: ($doctor->google_meet_link ?? null);
 
-        // Send appointment status update email to User
+        // Send appointment status update email to User (Soft-removed)
+        /*
         if ($user && $user->email) {
             try {
                 \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\AppointmentStatusUpdatedMail($booking));
@@ -419,6 +459,7 @@ class DoctorController extends Controller
                 \Log::error("Failed to send appointment status update email: " . $e->getMessage());
             }
         }
+        */
 
         // --- MOBILE & IN-APP NOTIFICATIONS ON STATUS UPDATE ---
         if ($request->status === 'Booked') {
@@ -661,6 +702,7 @@ class DoctorController extends Controller
         if (!empty($updateData)) {
             $order->update($updateData);
 
+            /*
             if (isset($updateData['order_status']) && $order->user && $order->user->email) {
                 try {
                     \Illuminate\Support\Facades\Mail::to($order->user->email)->send(new \App\Mail\OrderStatusUpdatedMail($order));
@@ -668,6 +710,7 @@ class DoctorController extends Controller
                     \Illuminate\Support\Facades\Log::error("Failed to send order status mail to {$order->user->email}: " . $e->getMessage());
                 }
             }
+            */
         }
 
         return back()->with('success', 'Order status updated successfully!');

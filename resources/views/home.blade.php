@@ -741,6 +741,85 @@ function resumeAdMarquee() {
 </script>
 @endif
 
+<!-- ═══ CONTACT INFORMATION SECTION ════════════════════════ -->
+<section class="py-6" style="background: #faf8f4; border-top: 1px solid rgba(12, 59, 70, 0.06); border-bottom: 1px solid rgba(12, 59, 70, 0.06);">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <!-- Details Column -->
+            <div class="col-lg-6 reveal">
+                <div class="section-eyebrow mb-3">
+                    <i class="fas fa-envelope-open-text"></i> Get In Touch
+                </div>
+                <h2 style="font-family: 'Playfair Display', serif; color: var(--forest); font-size: clamp(2rem, 4vw, 2.8rem); font-weight: 800; margin-bottom: 1.2rem; line-height: 1.2;">
+                    We are Here to <span style="color: var(--gold);">Help You</span>
+                </h2>
+                <p class="text-muted mb-5" style="max-width: 500px; line-height: 1.7;">
+                    Have questions about our services, doctors, or products? Reach out to us through any of the channels below. We look forward to connecting with you.
+                </p>
+
+                <div class="row g-4">
+                    <!-- Phone -->
+                    <div class="col-sm-6">
+                        <div class="d-flex gap-3 p-3 bg-white rounded-4 border shadow-sm h-100 contact-card-lift">
+                            <div class="rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center flex-shrink-0" style="width: 48px; height: 48px;">
+                                <i class="fas fa-phone-alt fs-5"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1" style="color: var(--forest);">Phone Number</h6>
+                                <p class="text-muted small mb-0">{{ \App\Models\Setting::getValue('contact_phone', '+91 98765 43210') }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="col-sm-6">
+                        <div class="d-flex gap-3 p-3 bg-white rounded-4 border shadow-sm h-100 contact-card-lift">
+                            <div class="rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center flex-shrink-0" style="width: 48px; height: 48px;">
+                                <i class="fas fa-envelope fs-5"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1" style="color: var(--forest);">Email Address</h6>
+                                <p class="text-muted small mb-0 text-break">{{ \App\Models\Setting::getValue('contact_email', 'support@ayurveda.com') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quote/Visual Column -->
+            <div class="col-lg-6 reveal">
+                <div class="position-relative p-5 rounded-4 shadow-sm border text-white overflow-hidden d-flex flex-column justify-content-center" style="background: linear-gradient(135deg, var(--forest) 0%, var(--sage) 100%); min-height: 380px;">
+                    <!-- Decorative BG overlay -->
+                    <div class="position-absolute opacity-10 end-0 bottom-0 pointer-events-none" style="transform: translate(20%, 20%); font-size: 15rem; color: #fff;">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                    
+                    <div class="position-relative z-1">
+                        <i class="fas fa-quote-left text-warning fa-3x opacity-50 mb-4"></i>
+                        <h4 class="lh-base mb-4 fw-light" style="font-family: 'Playfair Display', serif; font-size: clamp(1.4rem, 3vw, 1.8rem);">
+                            "Health is a state of complete harmony of the body, mind, and spirit. When one is free from physical disabilities and mental distractions, the gates of the soul open."
+                        </h4>
+                        <div class="d-flex align-items-center gap-3 mt-4">
+                            <div style="width: 40px; height: 2px; background: var(--gold);"></div>
+                            <span class="text-uppercase fw-bold letter-spacing-1.5" style="color: var(--gold); font-size: 0.8rem;">Ayurvedic Wisdom</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.contact-card-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.contact-card-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05) !important;
+}
+</style>
+
 <!-- ═══ CTA FOOTER BANNER ════════════════════════════════ -->
 <section style="background:linear-gradient(135deg,#0c3b2e 0%,#1d5c42 100%);padding:5rem 0;">
     <div class="container text-center">

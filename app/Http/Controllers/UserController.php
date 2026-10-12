@@ -51,11 +51,9 @@ class UserController extends Controller
 
         foreach ($guards as $guard) {
             if ($guard === 'admin') {
-                if ($isEmail) {
-                    $admin = \App\Models\Admin::where('email', $loginInput)->first();
-                } else {
-                    $admin = \App\Models\Admin::where('name', $loginInput)->first();
-                }
+                $admin = \App\Models\Admin::where('email', $loginInput)
+                    ->orWhere('name', $loginInput)
+                    ->first();
                 
                 if ($admin && ($admin->password === $password || Hash::check($password, $admin->password))) {
                     Auth::guard('admin')->login($admin);
@@ -81,11 +79,13 @@ class UserController extends Controller
                     'hospital' => \App\Models\Hospital::class,
                 };
                 
-                if ($isEmail) {
-                    $user = $userModel::where('email', $loginInput)->first();
+                $query = $userModel::where('email', $loginInput);
+                if ($guard === 'pharma') {
+                    $query->orWhere('company_name', $loginInput)->orWhere('contact_person', $loginInput);
                 } else {
-                    $user = $userModel::where('name', $loginInput)->first();
+                    $query->orWhere('name', $loginInput);
                 }
+                $user = $query->first();
                 
                 if ($user) {
                     $passwordMatches = ($user->password === $password) || Hash::check($password, $user->password);
@@ -155,9 +155,9 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:doctors,email',
             'password' => 'required|string|min:8',
             'phone' => ['required', 'regex:/^[6-9]\d{9}$/'],
-            'medical_registration_no' => ['required', 'string', 'min:10', 'max:18', 'regex:/^[A-Z]{2,6}\/[0-9]{1,6}\/[0-9]{4}$/'],
+            'medical_registration_no' => ['required', 'string', 'min:9', 'max:18', 'regex:/^[A-Z]{2,6}\/[0-9]{1,6}\/[0-9]{4}$/'],
             'qualification' => 'required|string|min:2|max:255',
-            'specialization_category' => 'required|exists:doctor_categories,id',
+            'specialization_category' => 'required',
             'specialization_subcategory' => 'nullable|string|max:255',
             'practice_location_type' => 'nullable|in:india,outside_india',
             'state_name' => 'nullable|required_if:practice_location_type,india|string|min:2|max:100',
@@ -214,8 +214,20 @@ class UserController extends Controller
             $councilCertPath = $request->file('council_certificate')->store('doctor_docs', 'public');
         }
 
-        $category = \App\Models\DoctorCategory::find($request->specialization_category);
-        $subcategory = \App\Models\DoctorSubcategory::find($request->specialization_subcategory);
+        $catInput = $request->specialization_category;
+        if (is_array($catInput)) {
+            $catNames = \App\Models\DoctorCategory::whereIn('id', $catInput)
+                ->orWhereIn('name', $catInput)
+                ->pluck('name')
+                ->toArray();
+            if (empty($catNames)) {
+                $catNames = array_filter($catInput);
+            }
+            $categoryName = implode(', ', $catNames);
+        } else {
+            $cat = \App\Models\DoctorCategory::find($catInput);
+            $categoryName = $cat ? $cat->name : $catInput;
+        }
 
         $availableTime = null;
         if ($request->filled('available_from') && $request->filled('available_to')) {
@@ -234,7 +246,7 @@ class UserController extends Controller
             'password_plain' => $request->password,
             'phone' => $request->phone,
             'medical_registration_no' => strtoupper($request->medical_registration_no),
-            'specialization_category' => $category ? $category->name : $request->specialization_category,
+            'specialization_category' => $categoryName,
             'specialization_subcategory' => $request->specialization_subcategory,
             'district_id' => $districtId,
             'current_location' => $request->current_location,
@@ -250,9 +262,9 @@ class UserController extends Controller
             'council_certificate' => $councilCertPath,
             'hospital_id' => $request->hospital_id,
             'is_active' => false,
-            'knows_medical_astrology' => $request->has('knows_medical_astrology') || $request->input('knows_medical_astrology') == '1',
-            'astrology_details' => $request->astrology_details,
-            'astrology_qualification' => $request->astrology_qualification,
+            'knows_medical_astrology' => false,
+            'astrology_details' => null,
+            'astrology_qualification' => null,
         ]);
 
         return redirect()->route('login')->with('success', 'Doctor application submitted successfully! Your account credentials will be active after admin verification.');
@@ -269,7 +281,7 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|min:3|max:255',
             'license_number' => ['required', 'string', 'min:10', 'max:18', 'regex:/^[A-Z]{2,6}\/[0-9]{1,6}\/[0-9]{4}$/'],
-            'gst_number' => ['nullable', 'string', 'size:15', 'regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/i'],
+            'gst_number' => ['nullable', 'string', 'size:15', 'regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9A-Z]{1}Z[0-9A-Z]{1}$/i'],
             'contact_person' => 'required|string|min:3|max:255',
             'email' => 'required|string|email|max:255|unique:hospitals,email',
             'phone' => ['required', 'regex:/^[6-9]\d{9}$/'],
@@ -329,7 +341,7 @@ class UserController extends Controller
         $request->validate([
             'company_name' => 'required|string|min:3|max:255',
             'drug_license_no' => ['required', 'string', 'min:10', 'max:18', 'regex:/^[A-Z]{2}-[0-9]{2}[A-Z]\/[0-9]{1,5}\/[0-9]{4}$/'],
-            'gst_number' => ['required', 'string', 'size:15', 'regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/i'],
+            'gst_number' => ['required', 'string', 'size:15', 'regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9A-Z]{1}Z[0-9A-Z]{1}$/i'],
             'contact_person' => 'required|string|min:3|max:255',
             'email' => 'required|string|email|max:255|unique:pharma_companies,email',
             'phone' => ['required', 'regex:/^[6-9]\d{9}$/'],
@@ -565,6 +577,15 @@ class UserController extends Controller
     {
         $query = Doctor::where('is_admin_astrologer', false)->with(['district']);
 
+        $keralaDistricts = [
+            'alappuzha', 'ernakulam', 'idukki', 'kannur', 'kasaragod', 'kollam', 'kottayam', 
+            'kozhikode', 'malappuram', 'palakkad', 'pathanamthitta', 'thiruvananthapuram', 
+            'thrissur', 'wayanad'
+        ];
+        $keralaDistrictIds = \App\Models\District::whereIn(\DB::raw('LOWER(name)'), $keralaDistricts)
+            ->pluck('id')
+            ->toArray();
+
         // Filter by consultation type or location if requested
         if ($request->filled('type')) {
             if (in_array($request->type, ['Online', 'Offline'])) {
@@ -573,9 +594,14 @@ class UserController extends Controller
                       ->orWhere('consultation_type', 'Both');
                 });
             } elseif (in_array($request->type, ['Other', 'Abroad'])) {
-                $query->where(function ($q) {
-                    $q->whereNotNull('current_location')
-                      ->where('current_location', '!=', '');
+                $query->where(function ($q) use ($keralaDistrictIds) {
+                    $q->where(function ($sub) {
+                        $sub->whereNotNull('current_location')
+                            ->where('current_location', '!=', '');
+                    })->orWhere(function ($sub) use ($keralaDistrictIds) {
+                        $sub->whereNotNull('district_id')
+                            ->whereNotIn('district_id', $keralaDistrictIds);
+                    });
                 });
             }
         }
@@ -694,7 +720,10 @@ class UserController extends Controller
     // --- Order Section ---
     public function ordersIndex()
     {
-        $orders = Order::where('user_id', Auth::id())->latest()->get();
+        $orders = Order::with('items.product.doctor', 'items.product.pharmaCompany')
+            ->where('user_id', Auth::id())
+            ->latest()
+            ->get();
         return view('orders.index', compact('orders'));
     }
 
@@ -761,83 +790,108 @@ class UserController extends Controller
             }
         }
 
-        $totalPrice = 0;
-        foreach ($cart->items as $item) $totalPrice += $item->price * $item->quantity;
-
-        $order = Order::create([
-            'user_id' => Auth::id(),
-            'delivery_name' => $request->delivery_name,
-            'delivery_phone' => $request->delivery_phone,
-            'delivery_district' => $request->delivery_district,
-            'delivery_pincode' => $request->delivery_pincode,
-            'delivery_address' => $request->delivery_address,
-            'total_price' => $totalPrice,
-            'payment_method' => $request->payment_method,
-            'payment_status' => 'Pending',
-            'order_status' => 'Placed',
-        ]);
-
+        // Group cart items by seller
+        $groupedItems = [];
         foreach ($cart->items as $item) {
             $product = $item->product;
-            if ($product) {
-                $product->decrement('stock', $item->quantity);
+            if ($product->doctor_id) {
+                $key = 'doctor_' . $product->doctor_id;
+            } elseif ($product->pharma_company_id) {
+                $key = 'pharma_' . $product->pharma_company_id;
+            } else {
+                $key = 'system';
+            }
+            $groupedItems[$key][] = $item;
+        }
+
+        $ordersCreated = [];
+
+        foreach ($groupedItems as $sellerKey => $items) {
+            $totalPrice = 0;
+            foreach ($items as $item) {
+                $totalPrice += $item->price * $item->quantity;
             }
 
-            OrderItem::create([
-                'order_id' => $order->id,
-                'product_id' => $item->product_id,
-                'quantity' => $item->quantity,
-                'price' => $item->price,
+            $order = Order::create([
+                'user_id' => Auth::id(),
+                'delivery_name' => $request->delivery_name,
+                'delivery_phone' => $request->delivery_phone,
+                'delivery_district' => $request->delivery_district,
+                'delivery_pincode' => $request->delivery_pincode,
+                'delivery_address' => $request->delivery_address,
+                'total_price' => $totalPrice,
+                'payment_method' => $request->payment_method,
+                'payment_status' => 'Pending',
+                'order_status' => 'Placed',
             ]);
-        }
-        // Notify pharmaceutical companies about the new order
-        $companiesToNotify = [];
-        foreach ($cart->items as $item) {
-            if ($item->product && $item->product->pharma_company_id) {
-                $companiesToNotify[$item->product->pharma_company_id][] = $item;
-            }
-        }
 
-        foreach ($companiesToNotify as $companyId => $itemsList) {
-            $company = \App\Models\PharmaCompany::find($companyId);
-            if ($company && $company->email) {
-                try {
-                    \Illuminate\Support\Facades\Mail::to($company->email)->send(new \App\Mail\NewOrderNotification($order, $company, $itemsList));
-                } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::error("Failed to send order email to pharma: " . $e->getMessage());
+            foreach ($items as $item) {
+                $product = $item->product;
+                if ($product) {
+                    $product->decrement('stock', $item->quantity);
                 }
+
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $item->product_id,
+                    'quantity' => $item->quantity,
+                    'price' => $item->price,
+                ]);
             }
+
+            // Notify pharmaceutical companies about the new order
+            if (str_starts_with($sellerKey, 'pharma_')) {
+                $pharmaId = (int) str_replace('pharma_', '', $sellerKey);
+                $company = \App\Models\PharmaCompany::find($pharmaId);
+                /*
+                if ($company && $company->email) {
+                    try {
+                        \Illuminate\Support\Facades\Mail::to($company->email)->send(new \App\Mail\NewOrderNotification($order, $company, $items));
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::error("Failed to send order email to pharma: " . $e->getMessage());
+                    }
+                }
+                */
+            }
+
+            // Preload relationships for emails
+            $order->load(['items.product', 'user']);
+
+            // Send order confirmation email to User (Soft-removed)
+            /*
+            try {
+                Mail::to($order->user->email ?? Auth::user()->email)->send(new OrderPlacedUserMail($order));
+            } catch (\Exception $e) {
+                \Log::error("Failed to send order placed user email: " . $e->getMessage());
+            }
+            */
+
+            // Send order notification email to Pharma Company
+            if (str_starts_with($sellerKey, 'pharma_')) {
+                $pharmaId = (int) str_replace('pharma_', '', $sellerKey);
+                $pharma = \App\Models\PharmaCompany::find($pharmaId);
+                /*
+                if ($pharma && $pharma->email) {
+                    try {
+                        $orderItems = $order->items()->with('product.pharmaCompany')->get();
+                        Mail::to($pharma->email)->send(new OrderPlacedPharmaMail($order, $pharma, $orderItems));
+                    } catch (\Exception $e) {
+                        \Log::error("Failed to send order placed pharma email: " . $e->getMessage());
+                    }
+                }
+                */
+            }
+
+            $ordersCreated[] = $order;
         }
 
         $cart->items()->delete();
 
-        // Preload relationships to prevent N+1 query issues during email rendering
-        $order->load(['items.product', 'user']);
-
-        // Send order confirmation email to User
-        try {
-            Mail::to($order->user->email ?? Auth::user()->email)->send(new OrderPlacedUserMail($order));
-        } catch (\Exception $e) {
-            \Log::error("Failed to send order placed user email: " . $e->getMessage());
+        if (count($ordersCreated) === 1) {
+            return redirect()->route('orders.show', $ordersCreated[0]->id)->with('success', 'Order placed successfully!');
+        } else {
+            return redirect()->route('orders.index')->with('success', 'Orders placed successfully! Your cart items have been split into separate orders by seller.');
         }
-
-        // Send order notification email to Pharma Companies
-        try {
-            $itemsByPharma = $order->items()->with('product.pharmaCompany')->get()->groupBy(function($item) {
-                return $item->product->pharma_company_id;
-            });
-
-            foreach ($itemsByPharma as $pharmaId => $items) {
-                $pharma = \App\Models\PharmaCompany::find($pharmaId);
-                if ($pharma && $pharma->email) {
-                    Mail::to($pharma->email)->send(new OrderPlacedPharmaMail($order, $pharma, $items));
-                }
-            }
-        } catch (\Exception $e) {
-            \Log::error("Failed to send order placed pharma email: " . $e->getMessage());
-        }
-
-        return redirect()->route('orders.show', $order->id)->with('success', 'Order placed successfully!');
     }
 
     // --- Booking Section ---
@@ -981,18 +1035,21 @@ class UserController extends Controller
             ]);
         }
 
-        // Send appointment request email to Doctor
+        // Send appointment request email to Doctor (Soft-removed)
+        /*
         try {
             Mail::to($booking->doctor->email)->send(new AppointmentRequestMail($booking));
         } catch (\Exception $e) {
             \Log::error("Failed to send appointment request email: " . $e->getMessage());
         }
+        */
 
         return redirect()->route('bookings.my')->with('success', "Appointment request submitted for {$formattedDate} at {$formattedTime}! Awaiting doctor approval.");
     }
 
     public function myBookings()
     {
+        \App\Models\DoctorToken::autoCancelExpiredPendingBookings();
         $bookings = DoctorToken::where('user_id', Auth::id())->with('doctor')->orderBy('booking_date', 'desc')->get();
         return view('bookings.my-bookings', compact('bookings'));
     }
@@ -1038,6 +1095,50 @@ class UserController extends Controller
 
     public function getUnreadLatestNotification()
     {
+        // 0. Auto-cancel expired pending appointments across the entire system
+        \App\Models\DoctorToken::autoCancelExpiredPendingBookings();
+
+        // 1. Scan for pending appointments that are scheduled for today, are within 5 minutes of starting (or already passed), and lack confirmation
+        $now = now('Asia/Kolkata');
+        $pendingBookings = \App\Models\DoctorToken::where('user_id', Auth::id())
+            ->where('status', 'Pending')
+            ->get();
+
+        foreach ($pendingBookings as $booking) {
+            try {
+                $timeString = $booking->booking_time;
+                if (str_contains($timeString, ' to ')) {
+                    $parts = explode(' to ', $timeString);
+                    $timeString = trim($parts[0]);
+                }
+                $appointmentTime = \Carbon\Carbon::parse($booking->booking_date . ' ' . $timeString, 'Asia/Kolkata');
+                $diffInMinutes = $now->diffInMinutes($appointmentTime, false);
+
+                // If appointment is today, and starts in 5 minutes or less (or is already in the past today but not cancelled yet)
+                if ($booking->booking_date === $now->toDateString() && $diffInMinutes <= 5) {
+                    $alreadySent = \App\Models\UserNotification::where('user_id', Auth::id())
+                        ->where('type', 'appointment_no_confirmation')
+                        ->where('link', route('bookings.my') . '?token_id=' . $booking->id)
+                        ->exists();
+
+                    if (!$alreadySent) {
+                        $doctorName = $booking->doctor->name ?? 'the practitioner';
+                        \App\Models\UserNotification::create([
+                            'user_id' => Auth::id(),
+                            'title'   => 'No Confirmation from Doctor ⚠️',
+                            'message' => "The doctor Dr. {$doctorName} didn't provide any confirmation from their side. Do you want to cancel or consult another?",
+                            'type'    => 'appointment_no_confirmation',
+                            'link'    => route('bookings.my') . '?token_id=' . $booking->id,
+                            'is_read' => false,
+                        ]);
+                    }
+                }
+            } catch (\Exception $e) {
+                \Log::error("Failed to process reminder notification check: " . $e->getMessage());
+            }
+        }
+
+        // 2. Fetch and return the latest unread patient notification
         $notif = \App\Models\UserNotification::where('user_id', Auth::id())
             ->where('is_read', false)
             ->orderBy('created_at', 'desc')
@@ -1045,11 +1146,24 @@ class UserController extends Controller
 
         if ($notif) {
             $notif->update(['is_read' => true]);
+            
+            $bookingId = null;
+            if ($notif->type === 'appointment_no_confirmation' && $notif->link) {
+                $parts = parse_url($notif->link);
+                if (isset($parts['query'])) {
+                    parse_str($parts['query'], $query);
+                    $bookingId = $query['token_id'] ?? null;
+                }
+            }
+
             return response()->json([
                 'has_notification' => true,
                 'title'            => $notif->title,
                 'message'          => $notif->message,
                 'link'             => $notif->link ?? route('bookings.my'),
+                'type'             => $notif->type,
+                'booking_id'       => $bookingId,
+                'doctors_link'     => route('doctors.index'),
             ]);
         }
 
@@ -1063,19 +1177,48 @@ class UserController extends Controller
             ->firstOrFail();
 
         if (!in_array($booking->status, ['Pending', 'Booked'])) {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'This appointment cannot be cancelled because it is already ' . strtolower($booking->status) . '.'], 422);
+            }
             return back()->with('error', 'This appointment cannot be cancelled because it is already ' . strtolower($booking->status) . '.');
         }
 
         $booking->status = 'Cancelled';
         $booking->save();
 
-        // Send email to the doctor
+        // Create In-App Notification for Doctor
+        if ($booking->doctor_id) {
+            try {
+                $patientName = Auth::user()->name ?? 'A patient';
+                $formattedDate = \Carbon\Carbon::parse($booking->booking_date)->format('d M Y');
+                $formattedTime = \Carbon\Carbon::parse($booking->booking_time)->format('h:i A');
+
+                \App\Models\DoctorNotification::create([
+                    'doctor_id' => $booking->doctor_id,
+                    'title'     => 'Appointment Cancelled by Patient ❌',
+                    'message'   => "The patient {$patientName} cancelled their appointment scheduled for {$formattedDate} at {$formattedTime}.",
+                    'type'      => 'appointment_cancelled',
+                    'link'      => route('doctor.dashboard') . '?filter=all',
+                    'is_read'   => false,
+                ]);
+            } catch (\Exception $e) {
+                \Log::error("Failed to create doctor cancellation notification: " . $e->getMessage());
+            }
+        }
+
+        // Send email to the doctor (Soft-removed)
+        /*
         if ($booking->doctor && $booking->doctor->email) {
             try {
                 \Illuminate\Support\Facades\Mail::to($booking->doctor->email)->send(new \App\Mail\AppointmentCancelledByPatientMail($booking));
             } catch (\Exception $e) {
                 \Log::error("Failed to send appointment cancellation email to doctor: " . $e->getMessage());
             }
+        }
+        */
+
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Appointment has been cancelled successfully.']);
         }
 
         return back()->with('success', 'Appointment has been cancelled successfully.');
@@ -1199,6 +1342,7 @@ class UserController extends Controller
         }
 
         // Save original details to notify
+        $originalDoctorId = $booking->doctor_id;
         $originalDoctorName = $booking->doctor->name ?? 'N/A';
         $originalDoctorEmail = $booking->doctor->email ?? null;
         $originalDate = $booking->booking_date;
@@ -1236,18 +1380,66 @@ class UserController extends Controller
             'is_read' => false,
         ]);
 
-        // Send cancel/update mail to old doctor if doctor changed
-        if ($originalDoctorEmail && $booking->doctor_id != $request->doctor_id) {
+        // Send cancel/update mail/notifications to old doctor if doctor changed
+        if ($originalDoctorId != $request->doctor_id) {
+            if ($originalDoctorId) {
+                try {
+                    $patientName = Auth::user()->name ?? 'A patient';
+                    \App\Models\DoctorNotification::create([
+                        'doctor_id' => $originalDoctorId,
+                        'title'     => 'Appointment Cancelled by Patient ❌',
+                        'message'   => "The patient {$patientName} cancelled their appointment with you (rescheduled to another doctor).",
+                        'type'      => 'appointment_cancelled',
+                        'link'      => route('doctor.dashboard') . '?filter=all',
+                        'is_read'   => false,
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::error("Failed to create old doctor notification on reschedule: " . $e->getMessage());
+                }
+            }
+
+            /*
+            if ($originalDoctorEmail) {
+                try {
+                    // Send cancellation email to old doctor
+                    \Illuminate\Support\Facades\Mail::to($originalDoctorEmail)->send(new \App\Mail\AppointmentCancelledByPatientMail($booking));
+                } catch (\Exception $e) {
+                    \Log::error("Failed to notify old doctor on reschedule: " . $e->getMessage());
+                }
+            }
+            */
+        }
+
+        // Send request email/notifications to new/current doctor
+        if ($booking->doctor_id) {
             try {
-                // Send cancellation email to old doctor
-                \Illuminate\Support\Facades\Mail::to($originalDoctorEmail)->send(new \App\Mail\AppointmentCancelledByPatientMail($booking));
+                $patientName = Auth::user()->name ?? 'A patient';
+                if ($originalDoctorId != $booking->doctor_id) {
+                    \App\Models\DoctorNotification::create([
+                        'doctor_id' => $booking->doctor_id,
+                        'title'     => 'Rescheduled Appointment Request 📅',
+                        'message'   => "The patient {$patientName} rescheduled an appointment to your schedule for {$formattedDate} at {$formattedTime}.",
+                        'type'      => 'appointment_rescheduled',
+                        'link'      => route('doctor.dashboard'),
+                        'is_read'   => false,
+                    ]);
+                } else {
+                    \App\Models\DoctorNotification::create([
+                        'doctor_id' => $booking->doctor_id,
+                        'title'     => 'Appointment Rescheduled by Patient 📅',
+                        'message'   => "The patient {$patientName} rescheduled their appointment to {$formattedDate} at {$formattedTime}.",
+                        'type'      => 'appointment_rescheduled',
+                        'link'      => route('doctor.dashboard'),
+                        'is_read'   => false,
+                    ]);
+                }
             } catch (\Exception $e) {
-                \Log::error("Failed to notify old doctor on reschedule: " . $e->getMessage());
+                \Log::error("Failed to create doctor notifications on reschedule: " . $e->getMessage());
             }
         }
 
-        // Send request email to new/current doctor
-        if ($booking->doctor->email) {
+        /*
+        if ($booking->doctor && $booking->doctor->email) {
             try {
                 \Illuminate\Support\Facades\Mail::to($booking->doctor->email)->send(
                     new \App\Mail\AppointmentRescheduledMail($booking, $originalDoctorName, $originalDate, $originalTime)
@@ -1256,6 +1448,7 @@ class UserController extends Controller
                 \Log::error("Failed to send appointment rescheduled email to doctor: " . $e->getMessage());
             }
         }
+        */
 
         return redirect()->route('bookings.my')->with('success', 'Appointment rescheduled successfully! Awaiting doctor approval.');
     }

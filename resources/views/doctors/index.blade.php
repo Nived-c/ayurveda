@@ -209,10 +209,24 @@
             <div class="col-md-3">
                 <select id="districtFilter" style="height:52px;border-radius:30px;border:1px solid #c8dfc8;padding:0 20px;width:100%;background:#fff;font-size:0.9rem;box-shadow:0 4px 14px rgba(12,59,46,0.06);">
                     <option value="all">📍 All Districts</option>
-                    <option value="abroad">✈️ Other / Abroad</option>
-                    @foreach($districts as $dist)
-                        <option value="{{ $dist->id }}">{{ $dist->name }}</option>
-                    @endforeach
+                    <optgroup label="🌴 Kerala Districts">
+                        @php
+                            $keralaNames = ['alappuzha', 'ernakulam', 'idukki', 'kannur', 'kasaragod', 'kollam', 'kottayam', 'kozhikode', 'malappuram', 'palakkad', 'pathanamthitta', 'thiruvananthapuram', 'thrissur', 'wayanad'];
+                        @endphp
+                        @foreach($districts as $dist)
+                            @if(in_array(strtolower($dist->name), $keralaNames))
+                                <option value="{{ $dist->id }}">{{ $dist->name }}</option>
+                            @endif
+                        @endforeach
+                    </optgroup>
+                    <optgroup label="🌐 Other / Abroad">
+                        <option value="abroad">✈️ Other / Abroad</option>
+                        @foreach($districts as $dist)
+                            @if(!in_array(strtolower($dist->name), $keralaNames))
+                                <option value="{{ $dist->id }}">{{ $dist->name }}</option>
+                            @endif
+                        @endforeach
+                    </optgroup>
                 </select>
             </div>
             <div class="col-md-4">
@@ -220,7 +234,7 @@
                     <a href="{{ route('doctors.index') }}" class="filter-pill {{ ($activeType ?? 'all') === 'all' ? 'active' : '' }}">All</a>
                     <a href="{{ route('doctors.index', ['type' => 'Online']) }}" class="filter-pill pill-online {{ ($activeType ?? 'all') === 'Online' ? 'active' : '' }}"><i class="fas fa-video"></i> Online</a>
                     <a href="{{ route('doctors.index', ['type' => 'Offline']) }}" class="filter-pill pill-offline {{ ($activeType ?? 'all') === 'Offline' ? 'active' : '' }}"><i class="fas fa-hospital"></i> Offline</a>
-                    <a href="{{ route('doctors.index', ['type' => 'Other']) }}" class="filter-pill pill-both {{ ($activeType ?? 'all') === 'Other' ? 'active' : '' }}"><i class="fas fa-globe-asia"></i> Abroad</a>
+                    <a href="{{ route('doctors.index', ['type' => 'Other']) }}" class="filter-pill pill-both {{ ($activeType ?? 'all') === 'Other' ? 'active' : '' }}"><i class="fas fa-globe-asia"></i> Other / Abroad</a>
                 </div>
             </div>
         </div>
@@ -240,13 +254,18 @@
         @if(isset($doctors) && $doctors->count() > 0)
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 row-cols-xxl-6 g-3" id="doctorGrid">
             @foreach($doctors as $doctor)
+            @php
+                $keralaNames = ['alappuzha', 'ernakulam', 'idukki', 'kannur', 'kasaragod', 'kollam', 'kottayam', 'kozhikode', 'malappuram', 'palakkad', 'pathanamthitta', 'thiruvananthapuram', 'thrissur', 'wayanad'];
+                $isKerala = $doctor->district ? in_array(strtolower($doctor->district->name), $keralaNames) : false;
+            @endphp
             <div class="col doctor-card-wrap"
                  data-name="{{ strtolower($doctor->name) }}"
                  data-category="{{ strtolower($doctor->specialization_category ?? '') }}"
                  data-district="{{ $doctor->district_id }}"
                  data-constype="{{ strtolower($doctor->consultation_type ?? 'offline') }}"
                  data-haslocation="{{ !empty($doctor->current_location) ? 'yes' : 'no' }}"
-                 data-location="{{ strtolower($doctor->current_location ?? '') }}">
+                 data-location="{{ strtolower($doctor->current_location ?? '') }}"
+                 data-iskerala="{{ $isKerala ? 'yes' : 'no' }}">
                 <div class="doc-card">
                     <div class="doc-card-photo-wrap">
                         @if($doctor->photo)
@@ -425,10 +444,11 @@ reveals.forEach(r => revealObs.observe(r));
             const districtId = card.dataset.district || '';
             const hasLocation = card.dataset.haslocation || 'no';
             const location = card.dataset.location || '';
+            const isKerala = card.dataset.iskerala || 'yes';
             const matchSearch = !query || name.includes(query) || category.includes(query) || location.includes(query);
             const matchCategory = activeCategory === 'all' || category === activeCategory;
             let matchDistrict = selectedDistrict === 'all' || districtId === selectedDistrict;
-            if (selectedDistrict === 'abroad') matchDistrict = hasLocation === 'yes' || !districtId;
+            if (selectedDistrict === 'abroad') matchDistrict = hasLocation === 'yes' || isKerala === 'no' || !districtId;
             if (matchSearch && matchCategory && matchDistrict) { card.style.display = ''; visible++; }
             else { card.style.display = 'none'; }
         });

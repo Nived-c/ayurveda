@@ -39,7 +39,7 @@ class PharmaController extends Controller
             'password' => 'required|min:8',
             'phone' => ['required', 'regex:/^[6-9]\d{9}$/'],
             'drug_license_no' => ['nullable', 'string', 'min:10', 'max:18', 'regex:/^[A-Z]{2}-[0-9]{2}[A-Z]\/[0-9]{1,5}\/[0-9]{4}$/'],
-            'gst_number' => ['nullable', 'string', 'size:15', 'regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/i'],
+            'gst_number' => ['nullable', 'string', 'size:15', 'regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9A-Z]{1}Z[0-9A-Z]{1}$/i'],
             'contact_person' => 'nullable|string|max:255',
             'district_id' => 'nullable|exists:districts,id',
             'address' => 'nullable|string',
@@ -120,7 +120,7 @@ class PharmaController extends Controller
             'password' => 'nullable|min:8',
             'phone' => ['required', 'regex:/^[6-9]\d{9}$/'],
             'drug_license_no' => ['nullable', 'string', 'min:10', 'max:18', 'regex:/^[A-Z]{2}-[0-9]{2}[A-Z]\/[0-9]{1,5}\/[0-9]{4}$/'],
-            'gst_number' => ['nullable', 'string', 'size:15', 'regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/i'],
+            'gst_number' => ['nullable', 'string', 'size:15', 'regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9A-Z]{1}Z[0-9A-Z]{1}$/i'],
             'contact_person' => 'nullable|string|max:255',
             'district_id' => 'nullable|exists:districts,id',
             'address' => 'nullable|string',
@@ -279,6 +279,38 @@ class PharmaController extends Controller
         return redirect()->route('pharma.dashboard')->with('status', 'Product deleted successfully!');
     }
 
+    public function ordersIndex(Request $request)
+    {
+        $pharmaId = \Illuminate\Support\Facades\Auth::guard('pharma')->id();
+        
+        $query = \App\Models\Order::whereHas('items.product', function ($q) use ($pharmaId) {
+            $q->where('pharma_company_id', $pharmaId);
+        })->with(['user', 'items' => function ($q) use ($pharmaId) {
+            $q->whereHas('product', function ($p) use ($pharmaId) {
+                $p->where('pharma_company_id', $pharmaId);
+            })->with('product');
+        }]);
+
+        if ($request->filled('status') && $request->status !== 'All') {
+            $query->where('order_status', $request->status);
+        }
+
+        $orders = $query->latest()->paginate(15);
+
+        // Stats
+        $allOrders = \App\Models\Order::whereHas('items.product', function ($q) use ($pharmaId) {
+            $q->where('pharma_company_id', $pharmaId);
+        })->get();
+
+        $totalOrdersCount = $allOrders->count();
+        $pendingCount = $allOrders->where('order_status', 'Pending')->count();
+        $shippedCount = $allOrders->where('order_status', 'Shipped')->count();
+        $deliveredCount = $allOrders->where('order_status', 'Delivered')->count();
+        $totalRevenue = $allOrders->whereIn('payment_status', ['Completed', 'Received', 'Paid', 'Success'])->sum('total_price');
+
+        return view('pharma.orders.index', compact('orders', 'totalOrdersCount', 'pendingCount', 'shippedCount', 'deliveredCount', 'totalRevenue'));
+    }
+
     public function showOrder($id)
     {
         $pharmaId = \Illuminate\Support\Facades\Auth::guard('pharma')->id();
@@ -333,11 +365,9 @@ class PharmaController extends Controller
         return back()->with('success', 'Profile updated successfully!');
     }
 
-    // --- Product Category Management for Pharma ---
     public function productCategories()
     {
-        $categories = ProductCategory::with('subcategories')->get();
-        return view('pharma.categories.index', compact('categories'));
+        return redirect()->route('pharma.dashboard');
     }
 
     public function storeProductCategory(Request $request)
@@ -372,7 +402,7 @@ class PharmaController extends Controller
     public function updateOrderStatus(Request $request, $id)
     {
         $request->validate([
-            'order_status'   => 'nullable|in:Placed,Delivered',
+            'order_status'   => 'nullable|in:Placed,Shipped,Delivered,Cancelled',
             'payment_status' => 'nullable|in:Pending,Received,Completed,Paid',
         ]);
 
@@ -395,7 +425,8 @@ class PharmaController extends Controller
             $order->update($updateData);
         }
 
-        // Send order status updated email to User if order_status updated
+        // Send order status updated email to User if order_status updated (Soft-removed)
+        /*
         if ($request->has('order_status') && $order->user && $order->user->email) {
             try {
                 \Illuminate\Support\Facades\Mail::to($order->user->email)->send(new \App\Mail\OrderStatusUpdatedMail($order));
@@ -403,6 +434,7 @@ class PharmaController extends Controller
                 \Log::error("Failed to send order status updated email to {$order->user->email}: " . $e->getMessage());
             }
         }
+        */
 
         $msg = 'Order updated successfully!';
         if ($request->has('payment_status')) {

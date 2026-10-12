@@ -60,19 +60,37 @@
                                 @foreach($order->items as $item)
                                     <tr>
                                         <td>
-                                            <div class="d-flex align-items-center">
-                                                @if($item->product && $item->product->image)
-                                                    <img src="{{ asset('storage/' . $item->product->image) }}" alt="{{ $item->product->name }}" class="rounded shadow-sm border me-3" style="width: 50px; height: 50px; object-fit: cover;">
-                                                @else
+                                            @if($item->product)
+                                                <a href="{{ route('products.show', $item->product->id) }}" class="d-flex align-items-center text-decoration-none">
+                                                    @if($item->product->image)
+                                                        <img src="{{ asset('storage/' . $item->product->image) }}" alt="{{ $item->product->name }}" class="rounded shadow-sm border me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                                    @else
+                                                        <div class="rounded bg-light d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; border: 1px solid #dee2e6;">
+                                                            <i class="fas fa-image text-muted"></i>
+                                                        </div>
+                                                    @endif
+                                                    <div>
+                                                        <div class="fw-bold text-success">{{ $item->product->name }}</div>
+                                                        <small class="text-muted d-block">{{ $item->product->category }}</small>
+                                                        @if($item->product->doctor)
+                                                            <small class="text-success fw-bold d-block"><i class="fas fa-user-md me-1"></i>Seller: Dr. {{ $item->product->doctor->name }}</small>
+                                                        @elseif($item->product->pharmaCompany)
+                                                            <small class="text-success fw-bold d-block"><i class="fas fa-building me-1"></i>Seller: {{ $item->product->pharmaCompany->company_name }}</small>
+                                                        @else
+                                                            <small class="text-success fw-bold d-block"><i class="fas fa-store me-1"></i>Seller: Ayurveda System</small>
+                                                        @endif
+                                                    </div>
+                                                </a>
+                                            @else
+                                                <div class="d-flex align-items-center text-muted">
                                                     <div class="rounded bg-light d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; border: 1px solid #dee2e6;">
                                                         <i class="fas fa-image text-muted"></i>
                                                     </div>
-                                                @endif
-                                                <div>
-                                                    <div class="fw-bold">{{ $item->product ? $item->product->name : 'Product Removed' }}</div>
-                                                    <small class="text-muted">{{ $item->product ? $item->product->category : '' }}</small>
+                                                    <div>
+                                                        <div class="fw-bold">Product Removed</div>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            @endif
                                         </td>
                                         <td class="text-center">₹{{ number_format($item->price, 2) }}</td>
                                         <td class="text-center">{{ $item->quantity }}</td>

@@ -29,6 +29,12 @@
             <a href="{{ route('admin.pharmas.create') }}" class="btn btn-outline-dark px-3 py-2 fw-bold small rounded-3 shadow-sm text-decoration-none">
                 <i class="fas fa-building me-1"></i> Register Pharmacy
             </a>
+            <a href="{{ route('admin.categories.doctor') }}" class="btn btn-outline-success px-3 py-2 fw-bold small rounded-3 shadow-sm text-decoration-none">
+                <i class="fas fa-stethoscope me-1"></i> Doctor Categories
+            </a>
+            <a href="{{ route('admin.categories.product') }}" class="btn btn-outline-secondary px-3 py-2 fw-bold small rounded-3 shadow-sm text-decoration-none">
+                <i class="fas fa-tags me-1"></i> Product Categories
+            </a>
             <a href="{{ route('admin.advertisements.create') }}" class="btn btn-outline-primary px-3 py-2 fw-bold small rounded-3 shadow-sm text-decoration-none">
                 <i class="fas fa-bullhorn me-1"></i> Add Advertisement
             </a>

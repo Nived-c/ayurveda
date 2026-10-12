@@ -275,6 +275,35 @@
                         </button>
                     </div>
 
+                    <div class="col-12 mb-3 mt-1">
+                        <div class="form-check d-flex align-items-center">
+                            <input class="form-check-input me-2" type="checkbox" id="agreeTerms" required style="cursor: pointer; width: 1.2rem; height: 1.2rem; border-color: var(--primary-green);">
+                            <label class="form-check-label small text-muted mb-0" for="agreeTerms" style="cursor: pointer; user-select: none;">
+                                I agree to the <a href="{{ route('terms') }}" target="_blank" class="text-success fw-bold text-decoration-none">Terms of Service</a> & <a href="{{ route('privacy') }}" target="_blank" class="text-success fw-bold text-decoration-none">Privacy Policy</a> <span class="text-danger">*</span>
+                            </label>
+                        </div>
+                        <div class="mt-1 ps-4">
+                            <a href="#termsSummary" class="text-success small fw-semibold text-decoration-none" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="termsSummary">
+                                <i class="fas fa-info-circle me-1"></i> Read Summary of Terms & Privacy Policy
+                            </a>
+                            <div class="collapse mt-2" id="termsSummary">
+                                <div class="p-3 bg-light rounded-3 border small text-muted" style="font-size: 0.82rem; line-height: 1.5; border-color: rgba(109, 151, 115, 0.25) !important;">
+                                    <p class="mb-2 fw-semibold text-dark"><i class="fas fa-balance-scale text-success me-1"></i> Terms Summary:</p>
+                                    <ul class="mb-3 ps-3">
+                                        <li>Consultations and medical astrology bookings are complementary advice and do not replace emergency clinical diagnosis.</li>
+                                        <li>Medical registration numbers and credentials must be authentic and verified.</li>
+                                    </ul>
+                                    <p class="mb-2 fw-semibold text-dark"><i class="fas fa-lock text-success me-1"></i> Privacy Summary:</p>
+                                    <ul class="mb-0 ps-3">
+                                        <li>We collect registration details, phone/address credentials, and transaction logs.</li>
+                                        <li>Clinical consultation records are securely encrypted and protected.</li>
+                                        <li>Your information is shared only with doctors/sellers to fulfill specific appointments and product orders.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <button type="submit" class="btn btn-submit-patient w-100 py-3 fw-bold">
                         <i class="fas fa-paper-plane me-2"></i> Register & Send OTP
                     </button>

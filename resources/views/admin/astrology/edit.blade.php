@@ -129,14 +129,32 @@
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold">In-Clinic Available Timings</label>
-                            <input type="text" name="available_time" class="form-control" placeholder="e.g. 09:00 AM to 01:00 PM" value="{{ old('available_time', $astrologer->available_time) }}">
-                            <div class="form-text small">Leave blank if Offline consultations are not offered.</div>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label class="form-label small text-muted mb-1">From</label>
+                                    <input type="time" name="available_from" class="form-control" value="{{ old('available_from', $available_from) }}">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small text-muted mb-1">To</label>
+                                    <input type="time" name="available_to" class="form-control" value="{{ old('available_to', $available_to) }}">
+                                </div>
+                            </div>
+                            <div class="form-text small mt-1">Leave/clear if Offline consultations are not offered.</div>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Online Video Available Timings</label>
-                            <input type="text" name="online_available_time" class="form-control" placeholder="e.g. 04:00 PM to 08:00 PM" value="{{ old('online_available_time', $astrologer->online_available_time) }}">
-                            <div class="form-text small">Leave blank if Online consultations are not offered.</div>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label class="form-label small text-muted mb-1">From</label>
+                                    <input type="time" name="online_available_from" class="form-control" value="{{ old('online_available_from', $online_available_from) }}">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small text-muted mb-1">To</label>
+                                    <input type="time" name="online_available_to" class="form-control" value="{{ old('online_available_to', $online_available_to) }}">
+                                </div>
+                            </div>
+                            <div class="form-text small mt-1">Leave/clear if Online consultations are not offered.</div>
                         </div>
 
                         <div class="mb-0">

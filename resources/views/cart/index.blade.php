@@ -106,15 +106,15 @@
                                         @endphp
                                         <tr>
                                             <td class="align-middle ps-4 py-4">
-                                                <div class="d-flex align-items-center">
+                                                <a href="{{ route('products.show', $item->product->id) }}" class="d-flex align-items-center text-decoration-none">
                                                     @if($item->product->image)
                                                         <img src="{{ asset('storage/' . $item->product->image) }}" alt="{{ $item->product->name }}" class="rounded-3 shadow-sm border" style="width: 80px; height: 80px; object-fit: cover; margin-right: 20px;">
                                                     @endif
                                                     <div>
-                                                        <h6 class="mb-1 fw-bold text-dark">{{ $item->product->name }}</h6>
+                                                        <h6 class="mb-1 fw-bold text-success">{{ $item->product->name }}</h6>
                                                         <span class="badge bg-success bg-opacity-10 text-success rounded-pill fw-normal" style="font-size: 0.75rem;">{{ $item->product->category }}</span>
                                                     </div>
-                                                </div>
+                                                </a>
                                             </td>
                                             <td class="align-middle fw-semibold">₹{{ number_format($item->price, 2) }}</td>
                                             <td class="align-middle">

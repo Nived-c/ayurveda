@@ -152,8 +152,8 @@
         <form action="{{ route('admin.login') }}" method="POST">
             @csrf
             <div class="form-group">
-                <label>Email Address</label>
-                <input type="email" name="email" required>
+                <label>Email Address or Username</label>
+                <input type="text" name="email" value="{{ old('email') }}" placeholder="Enter Email or Username" required>
             </div>
             <div class="form-group">
                 <label>Password</label>

@@ -14,9 +14,9 @@
     </div>
     <div class="col-md-6 text-md-end mt-3 mt-md-0">
         <div class="d-flex gap-2 justify-content-md-end">
-            <button class="btn btn-outline-dark shadow-sm" data-bs-toggle="collapse" data-bs-target="#orderOrdersSection">
+            <a href="{{ route('pharma.orders.index') }}" class="btn btn-outline-dark shadow-sm">
                 <i class="fas fa-shopping-basket me-2"></i> View Orders
-            </button>
+            </a>
             <a href="{{ route('pharma.products.create') }}" class="btn btn-primary shadow-sm">
                 <i class="fas fa-plus me-2"></i> Add New Product
             </a>

@@ -328,7 +328,7 @@
                             <label class="form-label">Medical Registration Number <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light text-muted"><i class="fas fa-id-card"></i></span>
-                                <input type="text" name="medical_registration_no" class="form-control @error('medical_registration_no') is-invalid @enderror" placeholder="e.g. KMC/12345/2020" value="{{ old('medical_registration_no') }}" maxlength="25" minlength="5" pattern="[A-Z]{2,10}[-\/][A-Z0-9\/-]*[0-9]+[A-Z0-9\/-]*" title="Format: Council Abbreviation / Number / Year e.g. KMC/12345/2020" required>
+                                <input type="text" name="medical_registration_no" class="form-control @error('medical_registration_no') is-invalid @enderror" placeholder="e.g. KMC/12345/2020" value="{{ old('medical_registration_no') }}" maxlength="18" minlength="9" pattern="[A-Z]{2,6}\/[0-9]{1,6}\/[0-9]{4}" title="Format: Council Abbreviation / Number / Year e.g. KMC/12345/2020" required>
                             </div>
                             @error('medical_registration_no') <div class="invalid-feedback d-block small">{{ $message }}</div> @enderror
                         </div>
@@ -537,39 +537,33 @@
                             <div class="form-text small text-muted">Professional headshot photo (JPEG/PNG, max 2MB).</div>
                         </div>
 
-                        <!-- Medical Astrology Toggle & Extension (As requested in sketch) -->
-                        <div class="col-12 mt-3">
-                            <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="background: linear-gradient(135deg, #f0f7f3 0%, #e8f3ec 100%); border: 1.5px solid #c8e0d0 !important;">
-                                <div class="card-body p-3 p-md-4">
-                                    <div class="form-check form-switch d-flex align-items-center justify-content-between ps-0 mb-0">
-                                        <label class="form-check-label fw-bold text-dark d-flex align-items-center gap-2 mb-0" style="cursor: pointer;" for="knows_medical_astrology">
-                                            <span class="d-inline-flex align-items-center justify-content-center bg-white text-success rounded-circle shadow-sm" style="width: 38px; height: 38px; font-size: 1.1rem;">
-                                                <i class="fas fa-star-of-life"></i>
-                                            </span>
-                                            <div>
-                                                <div class="fs-6 fw-bold text-success mb-0">Know Medical Astrology</div>
-                                                <div class="text-muted small fw-normal">Are you qualified or experienced in Ayurvedic Medical Astrology (Jyotish)?</div>
-                                            </div>
-                                        </label>
-                                        <input class="form-check-input ms-3" type="checkbox" name="knows_medical_astrology" id="knows_medical_astrology" value="1" {{ old('knows_medical_astrology') ? 'checked' : '' }} onchange="toggleAstrologyExtension()" style="width: 2.8em; height: 1.5em; cursor: pointer;">
-                                    </div>
 
-                                    <!-- Expandable Extension Section (As drawn in sketch) -->
-                                    <div id="astrology_extension_wrapper" class="mt-3 pt-3 border-top" style="display: none; border-color: #d0e4d6 !important;">
-                                        <div class="row g-3">
-                                            <!-- What to know about it -->
-                                            <div class="col-12">
-                                                <label class="form-label fw-bold text-dark" for="astrology_details"><i class="fas fa-book-open text-success me-1"></i> What to know about it</label>
-                                                <textarea name="astrology_details" id="astrology_details" class="form-control bg-white" rows="3" placeholder="Describe your experience or practice approach in Medical Astrology (e.g. Nadi pariksha, planetary influence analysis on doshas)...">{{ old('astrology_details') }}</textarea>
-                                            </div>
+                    </div>
 
-                                            <!-- Any qualification -->
-                                            <div class="col-12">
-                                                <label class="form-label fw-bold text-dark" for="astrology_qualification"><i class="fas fa-certificate text-success me-1"></i> Any qualification?</label>
-                                                <input type="text" name="astrology_qualification" id="astrology_qualification" class="form-control bg-white" placeholder="e.g. Jyotish Acharya, Certificate in Vedic Medical Astrology" value="{{ old('astrology_qualification') }}">
-                                            </div>
-                                        </div>
-                                    </div>
+                    <div class="col-12 mb-3 mt-2">
+                        <div class="form-check d-flex align-items-center">
+                            <input class="form-check-input me-2" type="checkbox" id="agreeTerms" required style="cursor: pointer; width: 1.2rem; height: 1.2rem; border-color: var(--secondary-green);">
+                            <label class="form-check-label small text-muted mb-0" for="agreeTerms" style="cursor: pointer; user-select: none;">
+                                I agree to the <a href="{{ route('terms') }}" target="_blank" class="text-success fw-bold text-decoration-none">Terms of Service</a> & <a href="{{ route('privacy') }}" target="_blank" class="text-success fw-bold text-decoration-none">Privacy Policy</a> <span class="text-danger">*</span>
+                            </label>
+                        </div>
+                        <div class="mt-1 ps-4">
+                            <a href="#termsSummary" class="text-success small fw-semibold text-decoration-none" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="termsSummary">
+                                <i class="fas fa-info-circle me-1"></i> Read Summary of Terms & Privacy Policy
+                            </a>
+                            <div class="collapse mt-2" id="termsSummary">
+                                <div class="p-3 bg-light rounded-3 border small text-muted" style="font-size: 0.82rem; line-height: 1.5; border-color: rgba(109, 151, 115, 0.25) !important;">
+                                    <p class="mb-2 fw-semibold text-dark"><i class="fas fa-balance-scale text-success me-1"></i> Terms Summary:</p>
+                                    <ul class="mb-3 ps-3">
+                                        <li>You must provide an authentic state medical registration council number matching your certification.</li>
+                                        <li>You agree to offer professional care, ethical consultancy, and consult at designated locations or digital channels.</li>
+                                    </ul>
+                                    <p class="mb-2 fw-semibold text-dark"><i class="fas fa-lock text-success me-1"></i> Privacy Summary:</p>
+                                    <ul class="mb-0 ps-3">
+                                        <li>We display qualification metadata (experience, specialization, and clinics) publicly.</li>
+                                        <li>Licensing certificates are protected and only accessed by administrators for verification.</li>
+                                        <li>Patient appointment logs are private and secure.</li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
@@ -608,12 +602,7 @@ function togglePassword(inputId, button) {
 
 
 
-function toggleAstrologyExtension() {
-    const checkbox = document.getElementById('knows_medical_astrology');
-    const wrapper = document.getElementById('astrology_extension_wrapper');
-    if (!checkbox || !wrapper) return;
-    wrapper.style.display = checkbox.checked ? 'block' : 'none';
-}
+
 
 function toggleConsultationTimes() {
     const typeSelect = document.getElementById('consultation_type');
@@ -674,7 +663,6 @@ function togglePracticeLocationType() {
 
 document.addEventListener('DOMContentLoaded', function() {
     toggleConsultationTimes();
-    toggleAstrologyExtension();
     togglePracticeLocationType();
     const forms = document.querySelectorAll('form');
 

@@ -110,8 +110,11 @@
 
                             <hr class="my-5 opacity-10">
 
-                            <div class="d-grid shadow-sm">
-                                <button type="submit" class="btn btn-success btn-lg rounded-pill py-3 fw-bold">
+                            <div class="d-flex gap-3 mt-4">
+                                <a href="{{ url('/') }}" class="btn btn-outline-secondary btn-lg rounded-pill py-3 fw-bold flex-grow-1 text-decoration-none text-center">
+                                    <i class="fas fa-times me-2"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-success btn-lg rounded-pill py-3 fw-bold flex-grow-1">
                                     <i class="fas fa-save me-2"></i> Update Profile
                                 </button>
                             </div>
